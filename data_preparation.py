@@ -78,8 +78,6 @@ def convert_reviews_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     df = pd.read_csv(path_prefix  / f"{file_name}.csv")
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-
-
 def convert_items_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     """ items.parquet erstellen
         Es wurden Duplikate entfernt, da eine Dopplung keinen Mehrwert hat.
@@ -261,6 +259,7 @@ def convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     city_variable = "seller_city"
     costs_variable = "costs"
     seller_id_variable = "seller_id"
+    order_id_variable = "order_id"
     
     df = pd.read_csv(path_prefix  / f"{file_name}.csv")
     df[zip_code_variable] = df[zip_code_variable].astype("string").str.zfill(5)
@@ -323,14 +322,22 @@ def convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
 
     # Attribut Gesamtumsatz erstellen
     df_items = pd.read_parquet(path_cleaned_data_prefix / "items.parquet")
-    df_items[costs_variable] = df_items["price"] + df_items["freight_value"] # Zusammenrechnen der Kosten
+    df_orders = pd.read_parquet(path_cleaned_data_prefix / "orders.parquet")
 
-    # Pro Händler aufsummieren
-    costs_per_seller_id = df_items.groupby(seller_id_variable, as_index=False)[costs_variable].sum()
+    # Nur Bestellungen mit "delivered" nehmen
+    order_ids = df_orders.loc[
+        df_orders["order_status"] == "delivered", order_id_variable
+    ]
 
-    # Verbinden der Summe mit dem jeweiligen Händler
-    df = df.merge(costs_per_seller_id, on=seller_id_variable, how="left")
-    df = df.rename(columns={costs_variable: "sales_volume"})
+    # Nur diese Bestellungen summieren
+    sums = (
+        df_items[df_items[order_id_variable].isin(order_ids)]
+        .groupby(seller_id_variable)[["price", "freight_value"]]
+        .sum()
+        .sum(axis=1)
+    )
+
+    df["sales_volume"] = df[seller_id_variable].map(sums).fillna(0)
 
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
@@ -381,10 +388,10 @@ def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     # Attribut Verspätung hinzufügen
     df["delay"] = df[order_delivered_customer_date_variable] > df[order_estimated_delivery_date_variable]
 
+    # Attribut Lieferdauer hinzufügen
     df[order_delivered_customer_date_variable] = pd.to_datetime(df[order_delivered_customer_date_variable])
     df[order_purchase_timestamp_variable] = pd.to_datetime(df[order_purchase_timestamp_variable])
 
-    # Attribut Lieferdauer hinzufügen
     df["delivery_time_in_days"] = np.select(
     [
         (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days <= 7,
@@ -415,7 +422,7 @@ def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
 
     # Zusammenführen
     df_orders_and_customers = df.merge(df_customers, on="customer_id", how="inner")
-    df_orders_and_customers_and_items = df_orders_and_customers.merge(df_items, on="order_id", how="inner")
+    df_orders_and_customers_and_items = df_orders_and_customers.merge(df_items, on = order_id_variable, how="inner")
     df_full_merged = df_orders_and_customers_and_items.merge(df_sellers, on="seller_id", how="inner")
 
     # Vergleich je Zeile
