@@ -1,6 +1,8 @@
 import pandas as pd
 from pathlib import Path
 import importlib
+import numpy as np
+
 import data_preparation
 
 def convert_data_to_cleaned_version():
@@ -72,10 +74,29 @@ def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     """ orders.parquet erstellen
     """
     file_name = "orders"
+    order_delivered_customer_date_variable = "order_delivered_customer_date"
+    order_estimated_delivery_date_variable = "order_estimated_delivery_date"
+    order_purchase_timestamp_variable = "order_purchase_timestamp"
+    
     df = pd.read_csv(path_prefix  / f"{file_name}.csv")
 
     # Attribut Verspätung hinzufügen
-    df["delay"] = df["order_delivered_customer_date"] > df["order_estimated_delivery_date"]
+    df["delay"] = df[order_delivered_customer_date_variable] > df[order_estimated_delivery_date_variable]
+
+    df[order_delivered_customer_date_variable] = pd.to_datetime(df[order_delivered_customer_date_variable])
+    df[order_purchase_timestamp_variable] = pd.to_datetime(df[order_purchase_timestamp_variable])
+
+    # Attribut Lieferdauer hinzufügen
+    df["delivery_time_in_days"] = np.select(
+    [
+        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days <= 7,
+        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days.between(8, 14),
+        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days.between(15, 21),
+        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days > 21
+    ],
+    ["<= 7", "8 to 14", "15 to 21", "> 21"],
+    default="no value"
+    )
     
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
