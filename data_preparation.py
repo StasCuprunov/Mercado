@@ -28,12 +28,12 @@ def convert_data_to_cleaned_version():
     convert_service_observation_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_categories_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_reviews_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_items_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_geolocation_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_products_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_customers_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
 
 def convert_payments_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     """ payments.parquet erstellen
@@ -78,49 +78,7 @@ def convert_reviews_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     df = pd.read_csv(path_prefix  / f"{file_name}.csv")
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
-    """ orders.parquet erstellen
-    """
-    file_name = "orders"
-    order_delivered_customer_date_variable = "order_delivered_customer_date"
-    order_estimated_delivery_date_variable = "order_estimated_delivery_date"
-    order_purchase_timestamp_variable = "order_purchase_timestamp"
-    review_answer_timestamp_variable = "review_answer_timestamp"
-    order_id_variable = "order_id"
-    
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
 
-    # Attribut Verspätung hinzufügen
-    df["delay"] = df[order_delivered_customer_date_variable] > df[order_estimated_delivery_date_variable]
-
-    df[order_delivered_customer_date_variable] = pd.to_datetime(df[order_delivered_customer_date_variable])
-    df[order_purchase_timestamp_variable] = pd.to_datetime(df[order_purchase_timestamp_variable])
-
-    # Attribut Lieferdauer hinzufügen
-    df["delivery_time_in_days"] = np.select(
-    [
-        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days <= 7,
-        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days.between(8, 14),
-        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days.between(15, 21),
-        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days > 21
-    ],
-    ["<= 7", "8 to 14", "15 to 21", "> 21"],
-    default="no value"
-    )
-
-    # Attribut schlechte Bewertung hinzufügen
-    df_reviews = pd.read_parquet(path_cleaned_data_prefix / "reviews.parquet")
-
-    # Pro order_id den aktuellsten review_score mappen
-    last_review_values = (
-        df_reviews.dropna(subset=[review_answer_timestamp_variable])
-            .sort_values([review_answer_timestamp_variable, "review_id"], na_position="first")
-            .drop_duplicates(order_id_variable, keep="last")
-            .set_index(order_id_variable)["review_score"]
-    )
-    df["bad_review"] = df[order_id_variable].map(last_review_values) <= 2
-    
-    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
 def convert_items_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     """ items.parquet erstellen
@@ -404,4 +362,69 @@ def convert_customers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
         "santa barbara d oeste": "santa barbara d'oeste",
         "sao jorge do oeste": "sao jorge d'oeste",
     })
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    """ orders.parquet erstellen
+    """
+    file_name = "orders"
+    order_delivered_customer_date_variable = "order_delivered_customer_date"
+    order_estimated_delivery_date_variable = "order_estimated_delivery_date"
+    order_purchase_timestamp_variable = "order_purchase_timestamp"
+    review_answer_timestamp_variable = "review_answer_timestamp"
+    order_id_variable = "order_id"
+    
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+
+    # Attribut Verspätung hinzufügen
+    df["delay"] = df[order_delivered_customer_date_variable] > df[order_estimated_delivery_date_variable]
+
+    df[order_delivered_customer_date_variable] = pd.to_datetime(df[order_delivered_customer_date_variable])
+    df[order_purchase_timestamp_variable] = pd.to_datetime(df[order_purchase_timestamp_variable])
+
+    # Attribut Lieferdauer hinzufügen
+    df["delivery_time_in_days"] = np.select(
+    [
+        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days <= 7,
+        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days.between(8, 14),
+        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days.between(15, 21),
+        (df[order_delivered_customer_date_variable] - df[order_purchase_timestamp_variable]).dt.days > 21
+    ],
+    ["<= 7", "8 to 14", "15 to 21", "> 21"],
+    default="no value"
+    )
+
+    # Attribut schlechte Bewertung hinzufügen
+    df_reviews = pd.read_parquet(path_cleaned_data_prefix / "reviews.parquet")
+
+    # Pro order_id den aktuellsten review_score mappen
+    last_review_values = (
+        df_reviews.dropna(subset=[review_answer_timestamp_variable])
+            .sort_values([review_answer_timestamp_variable, "review_id"], na_position="first")
+            .drop_duplicates(order_id_variable, keep="last")
+            .set_index(order_id_variable)["review_score"]
+    )
+    df["bad_review"] = df[order_id_variable].map(last_review_values) <= 2
+
+    # Attribut Versand zwischen Bundesstaaten
+    df_customers = pd.read_parquet(path_cleaned_data_prefix / "customers.parquet")
+    df_items = pd.read_parquet(path_cleaned_data_prefix / "items.parquet")
+    df_sellers = pd.read_parquet(path_cleaned_data_prefix / "sellers.parquet")
+
+    # Zusammenführen
+    df_orders_and_customers = df.merge(df_customers, on="customer_id", how="inner")
+    df_orders_and_customers_and_items = df_orders_and_customers.merge(df_items, on="order_id", how="inner")
+    df_full_merged = df_orders_and_customers_and_items.merge(df_sellers, on="seller_id", how="inner")
+
+    # Vergleich je Zeile
+    df_different = df_full_merged["seller_state"] != df_full_merged["customer_state"]
+
+    # True, sobald mindestens eine Zeile pro order_id abweicht
+    has_difference = df_different.groupby(df_full_merged[order_id_variable]).any()
+
+    # Ergebnis ins andere DataFrame übertragen
+    df["interstate_shipping"] = (
+        df[order_id_variable].map(has_difference).fillna(False).astype(bool)
+    )
+    
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
