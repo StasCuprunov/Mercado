@@ -73,6 +73,10 @@ def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     """
     file_name = "orders"
     df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+
+    # Attribut Verspätung hinzufügen
+    df["delay"] = df["order_delivered_customer_date"] > df["order_estimated_delivery_date"]
+    
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
 def convert_items_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
