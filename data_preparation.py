@@ -4,11 +4,22 @@ import importlib
 import data_preparation
 
 def convert_data_to_cleaned_version():
-    folder = Path("cleaned_data")
+    """
+        Daten in gesäuberte Form als parquet-Dateien speichern
+
+        Säuberung am Beispiel von products mit den Kategorienamen
+        - Vor der Säuberung waren deutlich mehr Kategorien aufgrund falscher Schreibweise vorhanden. Ohne die Bereinigung wären sie als eigene Kategorie
+          angesehen worden. Durch die Säuberung werden nun korrekterweise die Produkte kategorisiert, so dass bei Analysen in Bezug auf Kategorien
+          die passenden Produkte genommen werden.
+    """
+    # Pfade bestimmen
+    destination_path = "cleaned_data"
+    folder = Path(destination_path)
     folder.mkdir(parents=True, exist_ok=True)
     path_prefix = Path.cwd() / "data/"
-    path_cleaned_data_prefix = Path.cwd() / "cleaned_data"
-    
+    path_cleaned_data_prefix = Path.cwd() / destination_path
+
+    # Säuberung der Daten
     convert_payments_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_pilot_support_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_service_experiment_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
