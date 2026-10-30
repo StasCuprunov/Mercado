@@ -1,0 +1,304 @@
+import pandas as pd
+from pathlib import Path
+import importlib
+import data_preparation
+
+def convert_data_to_cleaned_version():
+    folder = Path("cleaned_data")
+    folder.mkdir(parents=True, exist_ok=True)
+    path_prefix = Path.cwd() / "data/"
+    path_cleaned_data_prefix = Path.cwd() / "cleaned_data"
+    
+    convert_payments_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_pilot_support_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_service_experiment_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_service_observation_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_categories_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_items_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_reviews_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_geolocation_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_products_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_customers_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+
+def convert_payments_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "payments"
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_pilot_support_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "pilot_support"
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_service_experiment_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "service_experiment"
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_service_observation_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "service_observation"
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_categories_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "categories"
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "orders"
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_items_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "items"
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = df.drop_duplicates()
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_reviews_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "reviews"
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_geolocation_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "geolocation"
+    zip_code_variable = "geolocation_zip_code_prefix"
+    
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = df.drop_duplicates()
+    df[zip_code_variable] = df[zip_code_variable].astype("string").str.zfill(5)
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_products_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "products"
+    category_variable = "product_category_name"
+    quantity_variable = "product_photos_qty"
+    
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df[category_variable] = df[category_variable].str.lower()
+    df[category_variable] = df[category_variable].replace({
+        "acma_mesa_banho": "cama_mesa_banho",
+        "acsa_construcao": "casa_construcao",
+        "agro_industria_e_comercio ": "agro_industria_e_comercio",
+        "alimentos_bebdias": "alimentos_bebidas",
+        "appelaria": "papelaria",
+        "artes ": "artes",
+        "atuomotivo": "automotivo",
+        "automoitvo": "automotivo",
+        "automotivo ": "automotivo",
+        "automotvio": "automotivo",
+        "autmootivo" : "automotivo",
+        "audoi": "audio",
+        "bebes ": "bebes",
+        "bebse": "bebes",
+        "beebs": "bebes",
+        "beleaz_saude": "beleza_saude",
+        "beleza_asude": "beleza_saude",
+        "beleza_saude ": "beleza_saude",
+        "beleza_saued": "beleza_saude",
+        "beleza_suade": "beleza_saude",
+        "brinqeudos": "brinquedos",
+        "brinquedos ": "brinquedos",
+        "briqnuedos": "brinquedos",
+        "brniquedos": "brinquedos",
+        "caam_mesa_banho": "cama_mesa_banho",
+        "cama_emsa_banho": "cama_mesa_banho",
+        "cama_meas_banho": "cama_mesa_banho",
+        "cama_mesa_bahno": "cama_mesa_banho",
+        "cama_mesa_banho ":"cama_mesa_banho",
+        "cama_mesa_banoh": "cama_mesa_banho",
+        "cama_mesa_bnaho": "cama_mesa_banho",
+        "casa_conforto ": "casa_conforto",
+        "climatizacao ": "climatizacao",
+        "cmaa_mesa_banho": "cama_mesa_banho",
+        "cnosoles_games": "consoles_games",
+        "consoles_games ": "consoles_games",
+        "construcao_ferramentas_construcao ": "construcao_ferramentas_construcao",
+        "construcao_ferramentas_cosntrucao": "construcao_ferramentas_construcao",
+        "construcao_ferramentas_jardim ": "construcao_ferramentas_jardim",
+        "cool_stuff ": "cool_stuff",
+        "cool_sutff": "cool_stuff",
+        "cool_tsuff": "cool_stuff",
+        "cosntrucao_ferramentas_iluminacao": "construcao_ferramentas_iluminacao",
+        "ebleza_saude": "beleza_saude",
+        "eeltrodomesticos": "eletrodomesticos",
+        "eletrodomesticos": "eletrodomesticos",
+        "eletrodomesticos ": "eletrodomesticos",
+        "eletrodomesticos_2 ": "eletrodomesticos_2",
+        "eletronicos ": "eletronicos",
+        "eletroniocs": "eletronicos",
+        "eletroodmesticos": "eletrodomesticos",
+        "eletroportateis ": "eletroportateis",
+        "epsorte_lazer": "esporte_lazer",
+        "esporet_lazer": "esporte_lazer",
+        "esporte_alzer": "esporte_lazer",
+        "esporte_laezr": "esporte_lazer",
+        "esporte_lazer ": "esporte_lazer",
+        "esporte_lazre": "esporte_lazer",
+        "esprote_lazer": "esporte_lazer",
+        "etlefonia": "telefonia",
+        "fahsion_calcados": "fashion_calcados",
+        "fashion_bolsas_e_acesosrios": "fashion_bolsas_e_acessorios",
+        "fashion_bolsas_e_acessoiros": "fashion_bolsas_e_acessorios",
+        "fashion_bolsas_e_acessorios ": "fashion_bolsas_e_acessorios",
+        "fashion_roupa_masculina ": "fashion_roupa_masculina",
+        "ferramentas_jardim ": "ferramentas_jardim",
+        "ferramentas_jardmi": "ferramentas_jardim",
+        "ferramentsa_jardim": "ferramentas_jardim",
+        "ferrametnas_jardim": "ferramentas_jardim",
+        "fsahion_bolsas_e_acessorios": "fashion_bolsas_e_acessorios",
+        "ifnormatica_acessorios": "informatica_acessorios",
+        "informatcia_acessorios": "informatica_acessorios",
+        "informatiac_acessorios": "informatica_acessorios",
+        "informatica_acessorios ": "informatica_acessorios",
+        "informatica_acsesorios":  "informatica_acessorios",
+        "informtaica_acessorios": "informatica_acessorios",
+        "inofrmatica_acessorios": "informatica_acessorios",
+        "instrumentos_musicais ": "instrumentos_musicais",
+        "instrumetnos_musicais": "instrumentos_musicais",
+        "leetronicos": "eletronicos",
+        "livors_interesse_geral": "livros_interesse_geral",
+        "livros_tecnicos ": "livros_tecnicos",
+        "malas_acessorios ": "malas_acessorios",
+        "malas_acsesorios": "malas_acessorios",
+        "marekt_place": "market_place",
+        "moveis_cozinha_area_de_servico_jantar_e_jardim ": "moveis_cozinha_area_de_servico_jantar_e_jardim",
+        "moveis_decoarcao": "moveis_decoracao",
+        "moveis_decoracao ": "moveis_decoracao",
+        "moveis_decorcaao": "moveis_decoracao",
+        "moveis_edcoracao": "moveis_decoracao",
+        "moveis_escritorio ": "moveis_escritorio",
+        "moveis_esrcitorio": "moveis_escritorio",
+        "moveis_sala ": "moveis_sala",
+        "movesi_decoracao": "moveis_decoracao",
+        "movies_decoracao": "moveis_decoracao",
+        "ocol_stuff": "cool_stuff",
+        "omveis_decoracao": "moveis_decoracao",
+        "omveis_sala": "moveis_sala",
+        "papealria": "papelaria",
+        "papelaira": "papelaria",
+        "papelaria ": "papelaria",
+        "perfumarai": "perfumaria",
+        "perfumaria ": "perfumaria",
+        "perfumraia": "perfumaria",
+        "perufmaria": "perfumaria",
+        "pet_shop ": "pet_shop",
+        "pet_shpo": "pet_shop",
+        "rbinquedos": "brinquedos",
+        "relogios_presentes ": "relogios_presentes",
+        "relogios_presetnes": "relogios_presentes",
+        "relogios_presnetes": "relogios_presentes",
+        "relogios_rpesentes": "relogios_presentes",
+        "rleogios_presentes": "relogios_presentes",
+        "seporte_lazer": "esporte_lazer",
+        "telefnoia": "telefonia",
+        "telefoina": "telefonia",
+        "telefonia ": "telefonia",
+        "tleefonia": "telefonia",
+        "telfeonia_fixa": "telefonia_fixa",
+        "uatomotivo": "automotivo",
+        "utilidades_doemsticas": "utilidades_domesticas",
+        "utilidades_domestcias": "utilidades_domesticas",
+        "utilidades_domesticas ": "utilidades_domesticas",
+        "utilidades_domesticsa": "utilidades_domesticas",
+        "utilidades_dometsicas": "utilidades_domesticas",
+        "utilidades_odmesticas": "utilidades_domesticas",
+        "utilidadse_domesticas": "utilidades_domesticas",
+        "utilidades_domestiacs": "utilidades_domesticas"
+    })
+    df[quantity_variable] = df[quantity_variable].fillna(0).astype("Int64") 
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "sellers"
+    zip_code_variable = "seller_zip_code_prefix"
+    city_variable = "seller_city"
+    
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df[zip_code_variable] = df[zip_code_variable].astype("string").str.zfill(5)
+    df[city_variable] = df[city_variable].replace({
+        "aguas claras df": "aguas claras",
+        "andira-pr": "andira",
+        "angra dos reis rj": "angra dos reis",
+        "ao bernardo do campo": "sao bernardo do campo",
+        "auriflama/sp": "auriflama",
+        "balenario camboriu": "balneario camboriu",
+        "barbacena/ minas gerais": "barbacena",
+        "belo horizont": "belo horizonte",
+        "brasilia df": "brasilia",
+        "carapicuiba / sao paulo": "carapicuiba",
+        "cariacica / es": "cariacica",
+        "cascavael": "cascavel",
+        "ferraz de  vasconcelos": "ferraz de vasconcelos",
+        "floranopolis": "florianopolis",
+        "garulhos": "guarulhos",
+        "jacarei / sao paulo": "jacarei",
+        "lages - sc": "lages",
+        "maua/sao paulo": "maua",
+        "mogi das cruses": "mogi das cruzes",
+        "mogi das cruzes / sp": "mogi das cruzes",
+        "novo hamburgo, rio grande do sul, brasil": "novo hamburgo",
+        "pinhais/pr": "pinhais",
+        "portoferreira": "porto ferreira",
+        "ribeirao preto / sao paulo": "ribeirao preto",
+        "ribeirao pretp": "ribeirao preto",
+        "riberao preto": "ribeirao preto",
+        "rio de janeiro / rio de janeiro": "rio de janeiro",
+        "rio de janeiro \\rio de janeiro": "rio de janeiro",
+        "rio de janeiro, rio de janeiro, brasil": "rio de janeiro",
+        "s jose do rio preto": "sao jose do rio preto",
+        "sando andre": "santo andre",
+        "santa barbara d oeste": "santa barbara d'oeste",
+        "santa barbara d´oeste": "santa barbara d'oeste",
+        "santo andre/sao paulo": "santo andre",
+        "sao  jose dos pinhais": "sao jose dos pinhais",
+        "sao  paulo": "sao paulo",
+        "sao bernardo do capo": "sao bernardo do campo",
+        "sao jose do rio pret": "sao jose do rio preto",
+        "sao jose dos pinhas": "sao jose dos pinhais",
+        "sao miguel d'oeste": "sao miguel do oeste",
+        "sao paluo": "sao paulo",
+        "sao paulo - sp": "sao paulo",
+        "sao paulo / sao paulo": "sao paulo",
+        "sao paulo sp": "sao paulo",
+        "sao paulop": "sao paulo",
+        "sao pauo": "sao paulo",
+        "sao sebastiao da grama/sp": "sao sebastiao da grama",
+        "são paulo": "sao paulo",
+        "sbc": "sao bernardo do campo",
+        "sbc/sp": "sao bernardo do campo",
+        "scao jose do rio pardo": "sao jose do rio pardo",
+        "sp": "sao paulo",
+        "sp / sp": "sao paulo",
+        "tabao da serra": "taboao da serra"
+    })
+
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
+def convert_customers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    file_name = "customers"
+    zip_code_variable = "customer_zip_code_prefix"
+    city_variable = "customer_city"
+    
+    df = pd.read_csv(path_prefix / f"{file_name}.csv")
+    df[zip_code_variable] = df[zip_code_variable].astype("string").str.zfill(5)
+
+    df[city_variable] = df[city_variable].replace({
+        "arraial d ajuda": "arraial d'ajuda",
+        "dias d avila": "dias d'avila",
+        "embu": "embu das artes",
+        "espigao do oeste": "espigao d'oeste",
+        "estrela d oeste": "estrela d'oeste",
+        "goitacazes": "campos dos goytacazes",
+        "hidreletrica tucurui": "tucurui",
+        "mogi-mirim": "mogi mirim",
+        "palmeira d oeste": "palmeira d'oeste",
+        "parati": "paraty",
+        "piumhii": "piumhi",
+        "santa barbara d oeste": "santa barbara d'oeste",
+        "sao jorge do oeste": "sao jorge d'oeste",
+    })
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
