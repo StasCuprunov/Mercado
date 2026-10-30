@@ -328,7 +328,7 @@ def convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     # Pro Händler aufsummieren
     costs_per_seller_id = df_items.groupby(seller_id_variable, as_index=False)[costs_variable].sum()
 
-    # Verbinden der Summe mit dem jeweiligen HÄndler
+    # Verbinden der Summe mit dem jeweiligen Händler
     df = df.merge(costs_per_seller_id, on=seller_id_variable, how="left")
     df = df.rename(columns={costs_variable: "sales_volume"})
 
