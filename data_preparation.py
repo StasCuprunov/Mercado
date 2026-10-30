@@ -286,6 +286,8 @@ def convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     file_name = "sellers"
     zip_code_variable = "seller_zip_code_prefix"
     city_variable = "seller_city"
+    costs_variable = "costs"
+    seller_id_variable = "seller_id"
     
     df = pd.read_csv(path_prefix  / f"{file_name}.csv")
     df[zip_code_variable] = df[zip_code_variable].astype("string").str.zfill(5)
@@ -345,6 +347,17 @@ def convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
         "sp / sp": "sao paulo",
         "tabao da serra": "taboao da serra"
     })
+
+    # Attribut Gesamtumsatz erstellen
+    df_items = pd.read_parquet(path_cleaned_data_prefix / "items.parquet")
+    df_items[costs_variable] = df_items["price"] + df_items["freight_value"] # Zusammenrechnen der Kosten
+
+    # Pro Händler aufsummieren
+    costs_per_seller_id = df_items.groupby(seller_id_variable, as_index=False)[costs_variable].sum()
+
+    # Verbinden der Summe mit dem jeweiligen HÄndler
+    df = df.merge(costs_per_seller_id, on=seller_id_variable, how="left")
+    df = df.rename(columns={costs_variable: "sales_volume"})
 
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
