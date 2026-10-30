@@ -27,9 +27,9 @@ def convert_data_to_cleaned_version():
     convert_service_experiment_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_service_observation_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_categories_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_reviews_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_items_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_reviews_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_geolocation_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_products_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
@@ -70,6 +70,14 @@ def convert_categories_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
     df = pd.read_csv(path_prefix  / f"{file_name}.csv")
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
+
+def convert_reviews_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+    """ reviews.parquet erstellen
+    """
+    file_name = "reviews"
+    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
+
 def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     """ orders.parquet erstellen
     """
@@ -77,6 +85,8 @@ def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     order_delivered_customer_date_variable = "order_delivered_customer_date"
     order_estimated_delivery_date_variable = "order_estimated_delivery_date"
     order_purchase_timestamp_variable = "order_purchase_timestamp"
+    review_answer_timestamp_variable = "review_answer_timestamp"
+    order_id_variable = "order_id"
     
     df = pd.read_csv(path_prefix  / f"{file_name}.csv")
 
@@ -97,6 +107,18 @@ def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     ["<= 7", "8 to 14", "15 to 21", "> 21"],
     default="no value"
     )
+
+    # Attribut schlechte Bewertung hinzufügen
+    df_reviews = pd.read_parquet(path_cleaned_data_prefix / "reviews.parquet")
+
+    # Pro order_id den aktuellsten review_score mappen
+    last_review_values = (
+        df_reviews.dropna(subset=[review_answer_timestamp_variable])
+            .sort_values([review_answer_timestamp_variable, "review_id"], na_position="first")
+            .drop_duplicates(order_id_variable, keep="last")
+            .set_index(order_id_variable)["review_score"]
+    )
+    df["bad_review"] = df[order_id_variable].map(last_review_values) <= 2
     
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
@@ -107,13 +129,6 @@ def convert_items_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     file_name = "items"
     df = pd.read_csv(path_prefix  / f"{file_name}.csv")
     df = df.drop_duplicates()
-    df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
-
-def convert_reviews_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
-    """ reviews.parquet erstellen
-    """
-    file_name = "reviews"
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
 def convert_geolocation_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
