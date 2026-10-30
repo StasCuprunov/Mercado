@@ -373,6 +373,8 @@ def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     order_purchase_timestamp_variable = "order_purchase_timestamp"
     review_answer_timestamp_variable = "review_answer_timestamp"
     order_id_variable = "order_id"
+    total_freight_cost_variable = "total_freight_cost"
+    total_value_variable = "total_value"
     
     df = pd.read_csv(path_prefix  / f"{file_name}.csv")
 
@@ -426,5 +428,21 @@ def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     df["interstate_shipping"] = (
         df[order_id_variable].map(has_difference).fillna(False).astype(bool)
     )
+
+    # Attribute für Warenkorb / Fracht erstellen
+    # Attribut Positionszahl erstellen
+    df_position_number = df_items.groupby(order_id_variable)["order_item_id"].max()
+    df["position_number"] = df[order_id_variable].map(df_position_number)
+
+    # Attribut gesamter Warenwert erstellen
+    df_total_value = df_items.groupby(order_id_variable)["price"].sum()
+    df[total_value_variable] = df[order_id_variable].map(df_total_value)
+
+    # Attribut gesamte Frachtkosten erstellen
+    df_total_freight_cost = df_items.groupby(order_id_variable)["freight_value"].sum()
+    df[total_freight_cost_variable] = df[order_id_variable].map(df_total_freight_cost)
+
+    # Attribut Anteil der Frachtkosten an WArenwert plus Frachtkosten
+    df["ratio_freight_cost_to_value_and_freight_cost"] =  df[total_freight_cost_variable] / (df[total_value_variable] + df[total_freight_cost_variable]) 
     
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
