@@ -22,9 +22,9 @@ def convert_data_to_cleaned_version():
     # Säuberung der Daten
     convert_payments_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
     convert_pilot_support_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
-    convert_service_experiment_to_cleaned_version(ppath_source_prefix, path_cleaned_data_prefix)
-    convert_service_observation_to_cleaned_version(ppath_source_prefix, path_cleaned_data_prefix)
-    convert_categories_to_cleaned_version(ppath_source_prefix, path_cleaned_data_prefix)
+    convert_service_experiment_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
+    convert_service_observation_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
+    convert_categories_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
     convert_reviews_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
     convert_items_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
     convert_geolocation_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
