@@ -13,6 +13,7 @@ def create_merged_tables():
 
     # Erstellen der verschmolzenen Tabellen
     create_merged_table_orders(path_prefix, path_destination_prefix)
+    create_merged_table_products(path_prefix, path_destination_prefix)
 
 def create_merged_table_orders(path_prefix, path_destination_prefix):
     review_answer_timestamp_variable = "review_answer_timestamp"
@@ -40,7 +41,15 @@ def create_merged_table_orders(path_prefix, path_destination_prefix):
 
     df_merged.to_parquet(path_destination_prefix / "merged_orders_table.parquet", engine="pyarrow", index=False)
 
-#def create_merged_table_products(path_prefix, path_destination_prefix):
-    #df_orders = pd.read_parquet(path_prefix / "orders.parquet")
-    #df_items = pd.read_parquet(path_prefix / "items.parquet")
-    #df_sellers = pd.read_parquet(path_prefix / "sellers.parquet")
+def create_merged_table_products(path_prefix, path_destination_prefix):
+    # parquet-Dateien holen
+    df_items = pd.read_parquet(path_prefix / "items.parquet")
+    df_sellers = pd.read_parquet(path_prefix / "sellers.parquet")
+    df_products = pd.read_parquet(path_prefix / "products.parquet")
+    df_categories = pd.read_parquet(path_prefix / "categories.parquet")
+
+    df_merged = df_items.merge(df_sellers, on = "seller_id", how = "inner")
+    df_merged = df_merged.merge(df_products, on = "product_id", how = "inner")
+    df_merged = df_merged.merge(df_categories, on = "product_category_name", how = "inner")
+
+    df_merged.to_parquet(path_destination_prefix / "merged_products_table.parquet", engine="pyarrow", index=False)
