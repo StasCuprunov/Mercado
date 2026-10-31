@@ -3,8 +3,6 @@ from pathlib import Path
 import importlib
 import numpy as np
 
-import data_preparation
-
 def convert_data_to_cleaned_version():
     """
         Daten in gesäuberte Form als parquet-Dateien speichern
@@ -18,76 +16,76 @@ def convert_data_to_cleaned_version():
     destination_path = "cleaned_data"
     folder = Path(destination_path)
     folder.mkdir(parents=True, exist_ok=True)
-    path_prefix = Path.cwd() / "data/"
+    path_source_prefix = Path.cwd() / "data/"
     path_cleaned_data_prefix = Path.cwd() / destination_path
 
     # Säuberung der Daten
-    convert_payments_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_pilot_support_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_service_experiment_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_service_observation_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_categories_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_reviews_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_items_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_geolocation_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_products_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_customers_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
-    convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix)
+    convert_payments_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
+    convert_pilot_support_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
+    convert_service_experiment_to_cleaned_version(ppath_source_prefix, path_cleaned_data_prefix)
+    convert_service_observation_to_cleaned_version(ppath_source_prefix, path_cleaned_data_prefix)
+    convert_categories_to_cleaned_version(ppath_source_prefix, path_cleaned_data_prefix)
+    convert_reviews_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
+    convert_items_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
+    convert_geolocation_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
+    convert_products_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
+    convert_sellers_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
+    convert_customers_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
+    convert_orders_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix)
 
-def convert_payments_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_payments_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ payments.parquet erstellen
     """
     file_name = "payments"
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-def convert_pilot_support_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_pilot_support_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ pilot_support.parquet erstellen
     """
     file_name = "pilot_support"
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-def convert_service_experiment_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_service_experiment_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ service_experiment.parquet erstellen
     """
     file_name = "service_experiment"
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-def convert_service_observation_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_service_observation_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ service_observation.parquet erstellen
     """
     file_name = "service_observation"
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-def convert_categories_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_categories_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ categories.parquet erstellen
     """
     file_name = "categories"
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
 
-def convert_reviews_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_reviews_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ reviews.parquet erstellen
     """
     file_name = "reviews"
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-def convert_items_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_items_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ items.parquet erstellen
         Es wurden Duplikate entfernt, da eine Dopplung keinen Mehrwert hat.
     """
     file_name = "items"
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
     df = df.drop_duplicates()
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-def convert_geolocation_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_geolocation_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ geolocation.parquet erstellen
         Es wurden Duplikate entfernt, da eine Dopplung keinen Mehrwert hat.
         
@@ -96,12 +94,12 @@ def convert_geolocation_to_cleaned_version(path_prefix, path_cleaned_data_prefix
     file_name = "geolocation"
     zip_code_variable = "geolocation_zip_code_prefix"
     
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
     df = df.drop_duplicates()
     df[zip_code_variable] = df[zip_code_variable].astype("string").str.zfill(5)
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-def convert_products_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_products_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ products.parquet erstellen
         Die Kategorien von den Produkten wurden oftmals falsch geschrieben. Anhand der Wortähnlichkeit wurden die Kategorien der Produkte mit den
         Kategoriennamen der categorie.parquet verglichen und abgeändert.
@@ -113,7 +111,7 @@ def convert_products_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     category_variable = "product_category_name"
     quantity_variable = "product_photos_qty"
     
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
     df[category_variable] = df[category_variable].str.lower()
     df[category_variable] = df[category_variable].replace({
         "acma_mesa_banho": "cama_mesa_banho",
@@ -248,7 +246,7 @@ def convert_products_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     df[quantity_variable] = df[quantity_variable].fillna(0).astype("Int64") 
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-def convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_sellers_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ sellers.parquet erstellen
         Die Postleitzahl waren nicht mit führenden Nullen. Das Attribut wurde abgeändert zu einen String mit führenden Nullen als fünfstellige Wert.
 
@@ -261,7 +259,7 @@ def convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     seller_id_variable = "seller_id"
     order_id_variable = "order_id"
     
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
     df[zip_code_variable] = df[zip_code_variable].astype("string").str.zfill(5)
     df[city_variable] = df[city_variable].replace({
         "aguas claras df": "aguas claras",
@@ -337,11 +335,12 @@ def convert_sellers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
         .sum(axis=1)
     )
 
+    # Erstellen des Umsatzattributs
     df["sales_volume"] = df[seller_id_variable].map(sums).fillna(0)
 
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-def convert_customers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_customers_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ customers.parquet erstellen
         Die Postleitzahl waren nicht mit führenden Nullen. Das Attribut wurde abgeändert zu einen String mit führenden Nullen als fünfstellige Wert.
 
@@ -351,7 +350,7 @@ def convert_customers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     zip_code_variable = "customer_zip_code_prefix"
     city_variable = "customer_city"
     
-    df = pd.read_csv(path_prefix / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix / f"{file_name}.csv")
     df[zip_code_variable] = df[zip_code_variable].astype("string").str.zfill(5)
 
     df[city_variable] = df[city_variable].replace({
@@ -371,7 +370,7 @@ def convert_customers_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     })
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)
 
-def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
+def convert_orders_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ orders.parquet erstellen
     """
     file_name = "orders"
@@ -383,7 +382,7 @@ def convert_orders_to_cleaned_version(path_prefix, path_cleaned_data_prefix):
     total_freight_cost_variable = "total_freight_cost"
     total_value_variable = "total_value"
     
-    df = pd.read_csv(path_prefix  / f"{file_name}.csv")
+    df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
 
     # Attribut Verspätung hinzufügen
     df["delay"] = df[order_delivered_customer_date_variable] > df[order_estimated_delivery_date_variable]
