@@ -15,6 +15,7 @@ def create_merged_tables():
     create_merged_table_orders(path_prefix, path_destination_prefix)
     create_merged_table_products(path_prefix, path_destination_prefix)
     create_merged_orders_and_service_observation(path_prefix, path_destination_prefix)
+    create_merged_orders_and_pilot_support(path_prefix, path_destination_prefix)
 
 def create_merged_table_orders(path_prefix, path_destination_prefix):
     review_answer_timestamp_variable = "review_answer_timestamp"
@@ -63,4 +64,17 @@ def create_merged_orders_and_service_observation(path_prefix, path_destination_p
     df_merged = df_orders_table.merge(df_service_observation, on = "order_id", how = "inner")
 
     df_merged.to_parquet(path_destination_prefix / "merged_orders_and_service_observation_table.parquet", engine="pyarrow", index=False)
+
+def create_merged_orders_and_pilot_support(path_prefix, path_destination_prefix):
+    # parquet-Dateien holen
+    df_orders_table = pd.read_parquet(path_destination_prefix / "merged_orders_table.parquet")
+    df_pilot_support = pd.read_parquet(path_prefix / "pilot_support.parquet")
+
+    df_merged = df_orders_table.merge(df_pilot_support, on = "order_id", how = "inner")
+
+    # Doppelte Spalte löschen
+    df_merged = df_merged.drop(columns=["customer_unique_id_y"])
+    df_merged = df_merged.rename(columns={"customer_unique_id_x": "customer_unique_id"})
+
+    df_merged.to_parquet(path_destination_prefix / "merged_orders_and_pilot_support_table.parquet", engine="pyarrow", index=False)
     
