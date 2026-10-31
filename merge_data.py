@@ -14,6 +14,7 @@ def create_merged_tables():
     # Erstellen der verschmolzenen Tabellen
     create_merged_table_orders(path_prefix, path_destination_prefix)
     create_merged_table_products(path_prefix, path_destination_prefix)
+    create_merged_orders_and_service_observation(path_prefix, path_destination_prefix)
 
 def create_merged_table_orders(path_prefix, path_destination_prefix):
     review_answer_timestamp_variable = "review_answer_timestamp"
@@ -53,3 +54,13 @@ def create_merged_table_products(path_prefix, path_destination_prefix):
     df_merged = df_merged.merge(df_categories, on = "product_category_name", how = "inner")
 
     df_merged.to_parquet(path_destination_prefix / "merged_products_table.parquet", engine="pyarrow", index=False)
+
+def create_merged_orders_and_service_observation(path_prefix, path_destination_prefix):
+    # parquet-Dateien holen
+    df_orders_table = pd.read_parquet(path_destination_prefix / "merged_orders_table.parquet")
+    df_service_observation = pd.read_parquet(path_prefix / "service_observation.parquet")
+
+    df_merged = df_orders_table.merge(df_service_observation, on = "order_id", how = "inner")
+
+    df_merged.to_parquet(path_destination_prefix / "merged_orders_and_service_observation_table.parquet", engine="pyarrow", index=False)
+    
