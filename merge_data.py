@@ -72,6 +72,10 @@ def create_merged_table_products(path_prefix, path_destination_prefix):
     df_merged.to_parquet(path_destination_prefix / "merged_products_table.parquet", engine="pyarrow", index=False)
 
 def create_merged_table_orders_and_service_observation(path_prefix, path_destination_prefix):
+    """ Bestelltabelle mit service observation verknüpfen
+    
+        service observation hat 95824 Einträge. Die Einträge sind gleich geblieben.
+    """
     # parquet-Dateien holen
     df_orders_table = pd.read_parquet(path_destination_prefix / "merged_orders_table.parquet")
     df_service_observation = pd.read_parquet(path_prefix / "service_observation.parquet")
@@ -81,6 +85,10 @@ def create_merged_table_orders_and_service_observation(path_prefix, path_destina
     df_merged.to_parquet(path_destination_prefix / "merged_orders_and_service_observation_table.parquet", engine="pyarrow", index=False)
 
 def create_merged_table_orders_and_pilot_support(path_prefix, path_destination_prefix):
+    """ Bestelltabelle mit pilot support verknüpfen
+
+        pilot support hat 40 Einträge. Nach der Verschmelzung hat es immer noch 40 Einträge.
+    """
     # parquet-Dateien holen
     df_orders_table = pd.read_parquet(path_destination_prefix / "merged_orders_table.parquet")
     df_pilot_support = pd.read_parquet(path_prefix / "pilot_support.parquet")
@@ -94,6 +102,10 @@ def create_merged_table_orders_and_pilot_support(path_prefix, path_destination_p
     df_merged.to_parquet(path_destination_prefix / "merged_orders_and_pilot_support_table.parquet", engine="pyarrow", index=False)
 
 def create_merged_table_orders_and_service_experiment(path_prefix, path_destination_prefix):
+    """ Bestelltabelle mit service experiment verknüpfen
+
+        Service experiment hat 92747 Einträge. Mit der Verschmelzung ist die Anzahl an Einträgen gleich geblieben.
+    """
     # parquet-Dateien holen
     df_orders_table = pd.read_parquet(path_destination_prefix / "merged_orders_table.parquet")
     df_service_experiment = pd.read_parquet(path_prefix / "service_experiment.parquet")
