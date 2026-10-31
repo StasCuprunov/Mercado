@@ -14,11 +14,16 @@ def create_merged_tables():
     # Erstellen der verschmolzenen Tabellen
     create_merged_table_orders(path_prefix, path_destination_prefix)
     create_merged_table_products(path_prefix, path_destination_prefix)
-    create_merged_orders_and_service_observation(path_prefix, path_destination_prefix)
-    create_merged_orders_and_pilot_support(path_prefix, path_destination_prefix)
-    create_merged_orderds_and_service_experiment(path_prefix, path_destination_prefix)
+    create_merged_table_orders_and_service_observation(path_prefix, path_destination_prefix)
+    create_merged_table_orders_and_pilot_support(path_prefix, path_destination_prefix)
+    create_merged_table_orders_and_service_experiment(path_prefix, path_destination_prefix)
 
 def create_merged_table_orders(path_prefix, path_destination_prefix):
+    """
+        Bestelltabelle erstellen
+
+        orders hat 99441 Einträge, diese Bestelltabelle hat nur 96478 Einträge, da nur ausgelieferte Bestellungen hier verwendet werden.
+    """
     review_answer_timestamp_variable = "review_answer_timestamp"
     order_id_variable = "order_id"
     
@@ -45,19 +50,28 @@ def create_merged_table_orders(path_prefix, path_destination_prefix):
     df_merged.to_parquet(path_destination_prefix / "merged_orders_table.parquet", engine="pyarrow", index=False)
 
 def create_merged_table_products(path_prefix, path_destination_prefix):
+    """ Tabellen für Produkte erstellen
+
+        items hat 112650 Einträge. Da nur gelieferte Bestellungen zählen, sinkt der Wert auf 110197
+    """
     # parquet-Dateien holen
     df_items = pd.read_parquet(path_prefix / "items.parquet")
     df_sellers = pd.read_parquet(path_prefix / "sellers.parquet")
     df_products = pd.read_parquet(path_prefix / "products.parquet")
     df_categories = pd.read_parquet(path_prefix / "categories.parquet")
+    df_orders = pd.read_parquet(path_prefix / "orders.parquet")
 
-    df_merged = df_items.merge(df_sellers, on = "seller_id", how = "inner")
-    df_merged = df_merged.merge(df_products, on = "product_id", how = "inner")
-    df_merged = df_merged.merge(df_categories, on = "product_category_name", how = "inner")
+    # Entferne Zeilen, dessen order_status != delivered ist
+    order_ids = df_orders.loc[df_orders["order_status"] != "delivered", "order_id"]
+    df_items = df_items.loc[~df_items["order_id"].isin(order_ids)].copy()
+    
+    df_merged = df_items.merge(df_sellers, on = "seller_id", how = "left")
+    df_merged = df_merged.merge(df_products, on = "product_id", how = "left")
+    df_merged = df_merged.merge(df_categories, on = "product_category_name", how = "left")
 
     df_merged.to_parquet(path_destination_prefix / "merged_products_table.parquet", engine="pyarrow", index=False)
 
-def create_merged_orders_and_service_observation(path_prefix, path_destination_prefix):
+def create_merged_table_orders_and_service_observation(path_prefix, path_destination_prefix):
     # parquet-Dateien holen
     df_orders_table = pd.read_parquet(path_destination_prefix / "merged_orders_table.parquet")
     df_service_observation = pd.read_parquet(path_prefix / "service_observation.parquet")
@@ -66,7 +80,7 @@ def create_merged_orders_and_service_observation(path_prefix, path_destination_p
 
     df_merged.to_parquet(path_destination_prefix / "merged_orders_and_service_observation_table.parquet", engine="pyarrow", index=False)
 
-def create_merged_orders_and_pilot_support(path_prefix, path_destination_prefix):
+def create_merged_table_orders_and_pilot_support(path_prefix, path_destination_prefix):
     # parquet-Dateien holen
     df_orders_table = pd.read_parquet(path_destination_prefix / "merged_orders_table.parquet")
     df_pilot_support = pd.read_parquet(path_prefix / "pilot_support.parquet")
@@ -79,7 +93,7 @@ def create_merged_orders_and_pilot_support(path_prefix, path_destination_prefix)
 
     df_merged.to_parquet(path_destination_prefix / "merged_orders_and_pilot_support_table.parquet", engine="pyarrow", index=False)
 
-def create_merged_orderds_and_service_experiment(path_prefix, path_destination_prefix):
+def create_merged_table_orders_and_service_experiment(path_prefix, path_destination_prefix):
     # parquet-Dateien holen
     df_orders_table = pd.read_parquet(path_destination_prefix / "merged_orders_table.parquet")
     df_service_experiment = pd.read_parquet(path_prefix / "service_experiment.parquet")
