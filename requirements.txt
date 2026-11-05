@@ -1,0 +1,7 @@
+Folgende Bibliotheken werden verwendet:
+
+- importlib
+- pandas
+- pathlib
+- numpy
+
