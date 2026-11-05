@@ -320,7 +320,7 @@ def convert_sellers_to_cleaned_version(path_source_prefix, path_cleaned_data_pre
 
     # Attribut Gesamtumsatz erstellen
     df_items = pd.read_parquet(path_cleaned_data_prefix / "items.parquet")
-    df_orders = pd.read_parquet(path_cleaned_data_prefix / "orders.parquet")
+    df_orders = pd.read_csv(path_source_prefix / "orders.csv")
 
     # Nur Bestellungen mit "delivered" nehmen
     order_ids = df_orders.loc[
