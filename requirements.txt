@@ -4,4 +4,6 @@ Folgende Bibliotheken werden verwendet:
 - pandas
 - pathlib
 - numpy
-
+- plotly.express
+- plotly.graph_objects
+- plotly.subplots
