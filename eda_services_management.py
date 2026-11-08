@@ -4,6 +4,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 def create_box_plots_for_reviews():
+    """ Zeichen Boxplot für alle Jahre für das Attribut Bewertung
+    """
     review_answer_timestamp_variable = "review_answer_timestamp"
                                      
     df_reviews = pd.read_parquet("cleaned_data/reviews.parquet")
@@ -95,6 +97,8 @@ def average_review_score_per_month():
     fig.show()
 
 def plot_number_of_bad_reviews_per_day():
+    """ Zeichne pro Tag die Anzahl der schlechten Bewertungen
+    """
     review_answer_timestamp_variable = "review_answer_timestamp"
     number_of_reviews_variable = "number_of_reviews"
 
@@ -107,6 +111,7 @@ def plot_number_of_bad_reviews_per_day():
             .drop_duplicates(subset=review_answer_timestamp_variable, keep="last")
     )
 
+    # In Datum umwandeln
     df[review_answer_timestamp_variable] = pd.to_datetime(df[review_answer_timestamp_variable])
 
     # Zählt Anzahl schlechter Bewertungen pro Tag
@@ -130,4 +135,72 @@ def plot_number_of_bad_reviews_per_day():
     )
     
     fig.update_yaxes(rangemode="tozero", dtick=1)
+    fig.show()
+
+def connection_between_delivery_quality_and_reviews():
+    """ Zusammenhänge zwischen Lieferqualität und Bewertungen herausfinden
+    """
+    draw_devlivery_time_in_days_and_number_of_reviews_per_review_score()
+    draw_delay_and_number_of_reviews_per_review_score()
+    
+def draw_devlivery_time_in_days_and_number_of_reviews_per_review_score():
+    """ Zeichnen von Balkendiagramm mit Anzahl Bewertungen pro Bewertungswert nach Lieferdauergruppe
+
+    """
+    last_review_score_variable = "last_review_score"
+    delivery_time_in_days_variable = "delivery_time_in_days"
+
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_orders_table.parquet")
+
+    # Histogramm über Lieferdauergruppe und Anzahl dazugehörigen Bewertungen
+    fig = px.histogram(
+        df,
+        x=last_review_score_variable,
+        color=delivery_time_in_days_variable,
+        barmode="group",
+        category_orders={
+            delivery_time_in_days_variable: [
+                "<= 7", "8 to 14", "15 to 21", "> 21", "no value"
+            ]
+        },
+        labels={
+            last_review_score_variable: "Bewertung",
+            delivery_time_in_days_variable: "Lieferzeit in Tagen"
+        },
+        title="Bewertungen nach Lieferzeit",
+        template="plotly_white"
+    )
+    
+    fig.update_traces(xbins=dict(start=0.5, end=5.5, size=1))
+    fig.update_xaxes(dtick=1)
+    fig.update_yaxes(title_text="Anzahl")
+    fig.show()
+
+def draw_delay_and_number_of_reviews_per_review_score():
+    """ Zeichnen von Balkendiagramm mit Anzahl Verspätungen und dessen Bewertung
+    """
+    last_review_score_variable = "last_review_score"
+    
+    df = pd.read_parquet("merged_data/merged_orders_table.parquet")
+
+    # Nur die verspäteten Zeilen nehmen
+    df_delay = df.loc[df["delay"] == True]
+
+    # Zeichnen
+    fig = px.histogram(
+        df_delay,
+        x=last_review_score_variable,
+        labels={last_review_score_variable: "Bewertung"},
+        title="Anzahl verspäteter Lieferungen pro Bewertung",
+        template="plotly_white"
+    )
+    
+    fig.update_traces(
+        xbins=dict(start=0.5, end=5.5, size=1),
+        marker_color="#3498DB"
+    )
+    fig.update_layout(bargap=0.45)
+    fig.update_xaxes(dtick=1)
+    fig.update_yaxes(title_text="Anzahl verspäteter Lieferungen")
     fig.show()
