@@ -94,4 +94,40 @@ def average_review_score_per_month():
     fig.update_xaxes(dtick="M1", tickformat="%m.%Y")
     fig.show()
 
+def plot_number_of_bad_reviews_per_day():
+    review_answer_timestamp_variable = "review_answer_timestamp"
+    number_of_reviews_variable = "number_of_reviews"
+
+    # Datei einlesen
+    df = pd.read_parquet("cleaned_data/reviews.parquet")
+
+    # Nur die letzten Bewertungen in Bedracht ziehen
+    df = (
+        df.sort_values("review_id")
+            .drop_duplicates(subset=review_answer_timestamp_variable, keep="last")
+    )
+
+    df[review_answer_timestamp_variable] = pd.to_datetime(df[review_answer_timestamp_variable])
+
+    # Zählt Anzahl schlechter Bewertungen pro Tag
+    number_bad_reviews_per_day = (
+        df.loc[df["review_score"] <= 2]
+          .groupby(pd.Grouper(key=review_answer_timestamp_variable, freq="D"))
+          .size()
+          .reset_index(name=number_of_reviews_variable)
+    )
+
+    # Zeichnen
+    fig = px.line(
+        number_bad_reviews_per_day,
+        x=review_answer_timestamp_variable,
+        y=number_of_reviews_variable,
+        title="Anzahl schlechte Bewertungen (<= 2) pro Tag",
+        labels={
+            review_answer_timestamp_variable: "Datum",
+            number_of_reviews_variable: "Anzahl der Bewertungen"
+        }
+    )
     
+    fig.update_yaxes(rangemode="tozero", dtick=1)
+    fig.show()
