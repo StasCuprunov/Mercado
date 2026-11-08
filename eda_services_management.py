@@ -204,3 +204,48 @@ def draw_delay_and_number_of_reviews_per_review_score():
     fig.update_xaxes(dtick=1)
     fig.update_yaxes(title_text="Anzahl verspäteter Lieferungen")
     fig.show()
+
+def connection_betweeen_review_score_and_total_value():
+    """ Zusammenhang zwischen Bewertungswert und Gesamtkosten herausfinden
+    
+    """
+
+    last_review_score_variable = "last_review_score"
+    total_value_variable = "total_value"
+
+    # Daten einlesen
+    df = pd.read_parquet("merged_data/merged_orders_table.parquet")
+
+    # DataFrame fürs Zeichnen erstellen
+    plot_df = df[
+        [last_review_score_variable, total_value_variable]
+    ].dropna()
+
+    # Zeichnen
+    fig = px.box(
+        plot_df,
+        x=last_review_score_variable,
+        y=total_value_variable,
+        points="outliers",
+        labels={
+            last_review_score_variable: "Bewertung",
+            total_value_variable: "Gesamtkosten (BRL)"
+        },
+        title="Gesamtkosten nach Bewertung",
+        template="plotly_white"
+    )
+    
+    fig.update_xaxes(
+        type="category",
+        categoryorder="array",
+        categoryarray=[1, 2, 3, 4, 5]
+    )
+    fig.update_traces(marker_color="#3498DB")
+    fig.show()
+
+    # Korrelation zwischen Gesamtpreis und Bewertung nach Spearman bestimmen
+    korrelation = plot_df[total_value_variable].corr(
+        plot_df[last_review_score_variable],
+        method="spearman"
+    )
+    print(f"Spearman-Korrelation: {korrelation:.3f}")
