@@ -1,0 +1,15 @@
+Aufgabe 2.1
+1. Für die Änderung der Postleitzahlen wurde der Code von der KI Codex generiert. Es wurde überprüft, ob die Postleitzahlen Nullen voran haben und ob sie fünfstellig sind.
+2. Der Code für die Änderung des Datentyps "Anzahl an Fotos" für das Produkt wurde von der KI erzeugt. Durch Überprüfung wurden die nicht definierten Werte zu 0 umgewandelt.
+3. Für die Erstellung des Attributs "Umsatz pro Verkäufer" wurde der Code für die Zählung der gelieferten Waren von der KI erzeugt. Durch Probe wurde festgestellt, dass die richtige Umsatz berechnet worden ist.
+4. Auch die Sortierung in Liefergruppen wurde mithilfe der KI erstellt. Nach Überprüfung wurde korrekterweise festgestellt, dass die Bestellungen in richtigen Gruppen eingeteilt worden sind.
+5. Der Code für die aktuellsten Review-Werte wurde von der KI übernommen. Es wurde überprüft, so dass es das richtige macht.
+6. Unterstützung gab es beim Herausfinden, ob Lieferant und Käufer in verschiedenen Bundesländern sind. Der Code wurde nachvollzogen und der Code stimmt dazu.
+7. Das Entfernen von nicht benötigten Bestellpositionen wurde mithilfe der KI gelöst. Durch Überprüfung wurde festgestellt, dass der Code das richtige tut.
+
+Aufgabe 2.2
+Data Story Serviceleitung
+1. Der Code für die Generierung von Boxplots für die Bewertung für die Jahre 2016 - 2018 wurde von der KI erzeugt. Durch das Zeichnen wurde festgestellt, dass es die richtigen Boxplots zeichnet.
+2. Für den durchschnittliche Bewertung pro Monat wurde der Code von der KI verwendet. Nach Überprüfung wurde festgestelt, dass es das macht was es machen soll.
+3. Für die Anzahl schlechter Bewertungen pro Tag wurde die KI gefragt, wie es berechnet wird. Der dazugehörige Code ist auf Korrektheit überprüft worden.
+4. Es wurde für die Bestimmung des Zusammenhangs von Gesamtkosten und Bewertung die Bestimmung des Spearman-Korrelationskoeffizienten von der KI vorgeschlagen. Da Bewertung ein ordinalskalierter Wert ist und Gesamtkosten metrisch sind, ist dies möglich und sinnvoll.

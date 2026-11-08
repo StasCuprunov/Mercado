@@ -138,7 +138,7 @@ def plot_number_of_bad_reviews_per_day():
     fig.show()
 
 def connection_between_delivery_quality_and_reviews():
-    """ Zusammenhänge zwischen Lieferqualität und Bewertungen herausfinden
+    """ Wie verhält sich die Lieferqualität mit den Bewertungen?
     """
     draw_devlivery_time_in_days_and_number_of_reviews_per_review_score()
     draw_delay_and_number_of_reviews_per_review_score()
