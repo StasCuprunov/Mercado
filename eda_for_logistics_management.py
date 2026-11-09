@@ -195,3 +195,74 @@ def draw_sales_volume_per_month():
     )
 
     fig.show()
+
+def connection_between_sales_volume_and_number_of_photos():
+    """ Zusammenhang zwischen Anzahl Produktfotos und Umsatz vom Produkt herausfinden
+    """
+    sales_volume_variable = "sales_volume"
+    number_photos_variable = "number_photos"
+    product_id_variable = "product_id"
+    number_products_variable = "number_products"
+
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    # Spearman-Korrelationskoeffizienten bestimmen
+    
+    # Gesamtpreis berechnen
+    df[sales_volume_variable] = df["price"] + df["freight_value"]
+
+    # Pro Produkt Anzahl Fotos und dessen Gesamtumsatz bestimmen
+    sales_per_product = (
+        df.groupby(product_id_variable, as_index=False)
+        .agg(
+            number_photos=("product_photos_qty", "first"),
+            sales_volume=(sales_volume_variable, "sum")
+        )
+        .dropna(subset=[number_photos_variable, sales_volume_variable])
+    )
+
+    # Zeichnen
+    fig = px.scatter(
+        sales_per_product,
+        x=number_photos_variable,
+        y=sales_volume_variable,
+        hover_data=[product_id_variable],
+        title="Zusammenhang zwischen Produktfotos und Umsatz",
+        labels={
+            number_photos_variable: "Anzahl Produktfotos",
+            sales_volume_variable: "Gesamtumsatz inklusive Versandkosten in BRL"
+        }
+    )
+    
+    fig.show()
+    
+    # Spearman-Korrelation bestimmen
+    correlation = sales_per_product[number_photos_variable].corr(
+        sales_per_product[sales_volume_variable],
+        method="spearman"
+    )
+    
+    print(f"Spearman-Korrelation: {correlation:.3f}")
+
+    # Zeichnen von Anzahl Fotos in Abhängigkeit von Anzahl Produkten
+    products_per_number_photos = (
+        sales_per_product.groupby(number_photos_variable)
+        .size()
+        .reset_index(name=number_products_variable)
+        .sort_values(number_photos_variable)
+    )
+
+    # Zeichnen
+    fig = px.bar(
+        products_per_number_photos,
+        x=number_photos_variable,
+        y=number_products_variable,
+        title="Anzahl Produkte nach Anzahl der Produktfotos",
+        labels={
+            number_photos_variable: "Anzahl Fotos",
+            number_products_variable: "Anzahl Produkte"
+        }
+    )
+
+    fig.show()
