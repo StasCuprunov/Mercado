@@ -123,3 +123,36 @@ def draw_sales_volume_per_customer_id():
     )
     
     fig.show()
+
+def draw_sales_volume_per_category():
+    """ Die top_number Kategorien im Bezug auf Gesamtumsatz als Balkendiagramm zeichnen
+    """
+    top_number = 20
+    sales_volume_variable = "sales_volume"
+    product_category_name_variable = "product_category_name"
+
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    # Pro Kategorie dessen Umsatz aus Preis und Frachtkosten berechnen
+    sales_volume_per_category = (
+        df.assign(sales_volume=df["price"] + df["freight_value"])
+        .groupby(product_category_name_variable, as_index=False)[sales_volume_variable]
+        .sum()
+        .sort_values(sales_volume_variable, ascending=False)
+        .reset_index(drop=True)
+    )
+
+    # Zeichnen der top_number Kategorien
+    fig = px.bar(
+        sales_volume_per_category.nlargest(top_number, sales_volume_variable),
+        x=product_category_name_variable,
+        y=sales_volume_variable,
+        title="Gesamtumsatz pro Produktkategorie",
+        labels={
+            product_category_name_variable: "Produktkategorie",
+            sales_volume_variable: "Gesamtumsatz in BRL",
+        },
+    )
+    
+    fig.show()
