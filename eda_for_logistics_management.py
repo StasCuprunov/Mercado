@@ -95,3 +95,31 @@ def draw_sales_volume_per_product_id():
     )
     
     fig.show()
+
+def draw_sales_volume_per_customer_id():
+    """ Zeichen die top_number Gesamtumsätze pro Kunde
+    """
+    top_number = 20
+    customer_id_variable = "customer_id"
+    total_value_variable = "total_value"
+    
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_orders_table.parquet")
+    
+    # Umsatz pro Kunde bestimmen
+    sales_volume_per_customer = (
+        df.groupby(customer_id_variable, as_index=False)[total_value_variable]
+        .sum()
+        .sort_values(total_value_variable, ascending=False)
+    )
+
+    # Zeichnen
+    fig = px.bar(
+        sales_volume_per_customer.head(top_number),
+        x=customer_id_variable,
+        y=total_value_variable,
+        title="Gesamtumsatz pro Kunde",
+        labels={customer_id_variable: "Kunden-ID", total_value_variable: "Gesamtumsatz in BRL"},
+    )
+    
+    fig.show()
