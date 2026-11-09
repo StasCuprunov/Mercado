@@ -35,3 +35,35 @@ def draw_sales_volume_per_seller_id():
     fig.update_yaxes(range=[0, df_top[sales_volume_variable].max() * 1.1])
     
     fig.show()
+
+def draw_sales_volume_per_seller_state():
+    """ Zeichne als logarithmierte Balkendiagramm den Gesamtumsatz je Bundesstaat
+    """
+    seller_state_variable = "seller_state"
+    sales_volume_per_state_variable = "sales_volumen_per_state"
+    sales_volume_variable = "sales_volume"
+
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    # Pro Bundesstaat den Gesamtumsatz über alle Verkäufer berechnen
+    sales_per_state = (
+        df
+        .groupby(seller_state_variable, as_index=False)[sales_volume_variable]
+        .sum()
+        .rename(columns={sales_volume_variable: sales_volume_per_state_variable})
+        .sort_values(sales_volume_per_state_variable, ascending=False)
+        .reset_index(drop=True)
+    )
+
+    # Zeichnen
+    fig = px.bar(
+        sales_per_state.sort_values(sales_volume_per_state_variable, ascending=False),
+        x=seller_state_variable,
+        y=sales_volume_per_state_variable,
+        title="Gesamtumsatz pro Bundesstaat",
+        labels={seller_state_variable: "Bundesstaat", sales_volume_per_state_variable: "Gesamtumsatz in BRL - logarithmisch"},
+        log_y=True
+    )
+    
+    fig.show()
