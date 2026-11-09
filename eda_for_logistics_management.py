@@ -67,3 +67,31 @@ def draw_sales_volume_per_seller_state():
     )
     
     fig.show()
+
+def draw_sales_volume_per_product_id():
+    """ Zeichne als Balkendiagramm den Gesamtumsatz pro Produkt
+    """
+    top_number = 20
+    product_id_variable = "product_id"
+    sales_volume_variable = "sales_volume"
+    
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+    
+    # Pro Produkt Gesamtumsatz berechnen und als Variable "sales_volume" speichern
+    volume_per_product = (
+        df.assign(sales_volume=df["price"] + df["freight_value"])
+        .groupby(product_id_variable, as_index=False)[sales_volume_variable]
+        .sum()
+    )
+    
+    # Zeichnen von Top top_number höchsten Gesamtumsätze von Produkten
+    fig = px.bar(
+        volume_per_product.nlargest(top_number, sales_volume_variable).sort_values(sales_volume_variable, ascending=False),
+        x=product_id_variable,
+        y=sales_volume_variable,
+        title=f"Gesamtumsatz der Top {top_number} pro Produkt aus Frachtkosten und Preis",
+        labels={product_id_variable: "Produkt-ID", sales_volume_variable: "Gesamtsumme in BRL"},
+    )
+    
+    fig.show()
