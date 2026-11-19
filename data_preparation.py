@@ -448,7 +448,7 @@ def convert_orders_to_cleaned_version(path_source_prefix, path_cleaned_data_pref
     df_total_freight_cost = df_items.groupby(order_id_variable)["freight_value"].sum()
     df[total_freight_cost_variable] = df[order_id_variable].map(df_total_freight_cost)
 
-    # Attribut Anteil der Frachtkosten an WArenwert plus Frachtkosten
+    # Attribut Anteil der Frachtkosten an Warenwert plus Frachtkosten
     df["ratio_freight_cost_to_value_and_freight_cost"] =  df[total_freight_cost_variable] / (df[total_value_variable] + df[total_freight_cost_variable]) 
     
     df.to_parquet(path_cleaned_data_prefix / f"{file_name}.parquet", engine="pyarrow", index=False)

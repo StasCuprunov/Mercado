@@ -37,7 +37,7 @@ def draw_sales_volume_per_seller_id():
     fig.show()
 
 def draw_sales_volume_per_seller_state():
-    """ Zeichne als logarithmierte Balkendiagramm den Gesamtumsatz je Bundesstaat
+    """ Zeichne als logarithmierte Punktdiagramm den Gesamtumsatz je Bundesstaat
     """
     seller_state_variable = "seller_state"
     sales_volume_per_state_variable = "sales_volume_per_state"
@@ -57,7 +57,7 @@ def draw_sales_volume_per_seller_state():
     )
 
     # Zeichnen
-    fig = px.bar(
+    fig = px.scatter(
         sales_per_state.sort_values(sales_volume_per_state_variable, ascending=False),
         x=seller_state_variable,
         y=sales_volume_per_state_variable,
