@@ -65,12 +65,13 @@ def create_box_plots_for_reviews():
     fig.update_layout(template=PASTELL)
     fig.show()
 
-def average_review_score_per_month():
-    """ Zeichne pro Monat die durchschnittliche Bewertung
+def analyze_review_score():
+    """ Zeichne pro Monat die durchschnittliche Bewertung und zeichne Anzahl der Bewertungen pro Monat
 
     """
     review_answer_timestamp_variable = "review_answer_timestamp"
     review_score_average_variable = "review_score_average"
+    number_reviews_variable = "number_reviews"
     
     df = pd.read_parquet("cleaned_data/reviews.parquet")
 
@@ -85,13 +86,16 @@ def average_review_score_per_month():
 
     # Berechne die Durchschnittsbewertung pro Monat und sortiere nach chronologische Zeit
     average_per_month = (
-        df.groupby(pd.Grouper(key=review_answer_timestamp_variable, freq="MS"))["review_score"]
-          .mean()
-          .reset_index(name=review_score_average_variable)
-          .sort_values(review_answer_timestamp_variable)
-    )
+    df.groupby(pd.Grouper(key=review_answer_timestamp_variable, freq="MS"))["review_score"]
+      .agg(**{
+          review_score_average_variable: "mean",
+          number_reviews_variable: "count",
+      })
+      .reset_index()
+      .sort_values(review_answer_timestamp_variable)
+)
 
-    # Zeichnen
+    # Zeichnen: Durchschnittliche Bewertung pro Monat
     fig = px.line(
         average_per_month,
         x=review_answer_timestamp_variable,
@@ -107,6 +111,52 @@ def average_review_score_per_month():
     fig.update_xaxes(dtick="M1", tickformat="%m.%Y")
     fig.update_layout(template=PASTELL)
     fig.update_traces(line_color=first_color)
+    fig.show()
+
+    # Zeichnen: Anzahl Bewertungen pro Monat
+    fig = px.line(
+        average_per_month,
+        x=review_answer_timestamp_variable,
+        y=number_reviews_variable,
+        markers=True,
+        title="Anzahl Bewertungen pro Monat",
+        labels={
+            review_answer_timestamp_variable: "Monat",
+            number_reviews_variable: "Anzahl Bewertungen"
+        }
+    )
+    
+    fig.update_xaxes(dtick="M1", tickformat="%m.%Y")
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(line_color=first_color)
+    fig.show()
+
+    plot_number_of_delays_per_month()
+    
+def plot_number_of_delays_per_month():
+    df = pd.read_parquet("merged_data/merged_orders_table.parquet")
+    # Nur die verspäteten Zeilen nehmen
+    df_delay = df.loc[df["delay"] == True]
+
+    date = "order_delivered_customer_date"
+    
+    per_month = (
+        df.assign(**{date: pd.to_datetime(df[date])})
+          .groupby(pd.Grouper(key=date, freq="MS"))["delay"]
+          .sum(min_count=1)
+          .reset_index(name="number_delays")
+    )
+    
+    fig = px.bar(
+        per_month,
+        x=date,
+        y="number_delays",
+        title="Anzahl verspätete Lieferungen pro Monat",
+        labels={date: "Liefermonat", "number_delays": "Verspätungen"},
+        template=PASTELL,
+        color_discrete_sequence=[first_color],
+    )
+    fig.update_xaxes(tickformat="%m.%Y")
     fig.show()
 
 def plot_number_of_bad_reviews_per_day():
@@ -150,6 +200,31 @@ def plot_number_of_bad_reviews_per_day():
     fig.update_yaxes(rangemode="tozero", dtick=1)
     fig.update_layout(template=PASTELL)
     fig.update_traces(line_color=first_color)
+    fig.show()
+
+    plot_number_of_delays_per_day()
+
+def plot_number_of_delays_per_day():
+    df = pd.read_parquet("merged_data/merged_orders_table.parquet")
+    date = "order_delivered_customer_date"
+    
+    per_day = (
+        df.assign(**{date: pd.to_datetime(df[date])})
+          .groupby(pd.Grouper(key=date, freq="D"))["delay"]
+          .sum()
+          .reset_index(name="number_delays")
+    )
+    
+    fig = px.bar(
+        per_day,
+        x=date,
+        y="number_delays",
+        title="Anzahl verspäteter Lieferungen pro Tag",
+        labels={date: "Liefertag", "number_delays": "Verspätungen"},
+        template=PASTELL,
+        color_discrete_sequence=[first_color],
+    )
+    fig.update_xaxes(tickformat="%d.%m.%Y")
     fig.show()
 
 def connection_between_delivery_quality_and_reviews():
