@@ -47,6 +47,47 @@ def draw_sales_volume_per_seller_id():
     
     fig.show()
 
+    seller_ids = df_top["seller_id"].dropna().unique().tolist()
+
+    sales_volume_for_seller_per_product_category(seller_ids)
+
+def sales_volume_for_seller_per_product_category(seller_ids):
+    seller_id_variable = "seller_id"
+    sales_volume_variable = "sales_volume"
+    product_category_name_variable = "product_category_name"
+    
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    sales_volume = (
+    df.loc[df[seller_id_variable].isin(seller_ids)]
+      .assign(
+          sales_volume=lambda d: d["price"] + d["freight_value"],
+          product_category_name=lambda d: (
+              d[product_category_name_variable].fillna("Ohne Kategorie")
+          ),
+      )
+      .groupby([seller_id_variable, product_category_name_variable], as_index=False)
+      .agg(sales_volume=(sales_volume_variable, "sum"))
+    )
+
+    fig = px.bar(
+        sales_volume,
+        x=sales_volume_variable,
+        y=seller_id_variable,
+        color=product_category_name_variable,
+        orientation="h",
+        barmode="stack",
+        template=PASTELL,
+        title="Umsatz nach Verkäufer und Produktkategorie",
+        labels={
+            sales_volume_variable: "Gesamtumsatz in BRL inkl. Versand",
+            seller_id_variable: "Verkäufer-ID",
+            "product_category_name": "Produktkategorie",
+        },
+    )
+    fig.update_yaxes(categoryorder="total ascending")
+    fig.show()
+
 def draw_sales_volume_per_seller_state():
     """ Zeichne als logarithmierte Punktdiagramm den Gesamtumsatz je Bundesstaat
     """
