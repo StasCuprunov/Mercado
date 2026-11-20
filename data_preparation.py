@@ -78,7 +78,7 @@ def convert_reviews_to_cleaned_version(path_source_prefix, path_cleaned_data_pre
 
 def convert_items_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ items.parquet erstellen
-        Es wurden Duplikate entfernt, da eine Dopplung keinen Mehrwert hat.
+        Es wurden Duplikate entfernt, da eine Dopplung keinen Mehrwert hat. Von 112875 auf 112650 Einträge wurde die Anzahl der Elemente reduziert.
     """
     file_name = "items"
     df = pd.read_csv(path_source_prefix  / f"{file_name}.csv")
@@ -87,7 +87,7 @@ def convert_items_to_cleaned_version(path_source_prefix, path_cleaned_data_prefi
 
 def convert_geolocation_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ geolocation.parquet erstellen
-        Es wurden Duplikate entfernt, da eine Dopplung keinen Mehrwert hat.
+        Es wurden Duplikate entfernt, da eine Dopplung keinen Mehrwert hat. Von 1000163 auf 738332 Einträge wurde die Anzahl der Elemente reduziert.
         
         Die Postleitzahl waren nicht mit führenden Nullen. Das Attribut wurde abgeändert zu einen String mit führenden Nullen als fünfstellige Wert.
     """
@@ -102,7 +102,7 @@ def convert_geolocation_to_cleaned_version(path_source_prefix, path_cleaned_data
 def convert_products_to_cleaned_version(path_source_prefix, path_cleaned_data_prefix):
     """ products.parquet erstellen
         Die Kategorien von den Produkten wurden oftmals falsch geschrieben. Anhand der Wortähnlichkeit wurden die Kategorien der Produkte mit den
-        Kategoriennamen der categorie.parquet verglichen und abgeändert.
+        Kategoriennamen der categorie.parquet verglichen und abgeändert. Von 237 auf 73 Kategorien wurden die Produkte reduziert.
         
         Die Anzahl an Fotos wurde als Ganzzahl mit Minimum 0 abgebildet, da es eine Ganzzahl ist und weniger als 0 Fotos nicht möglich sind. NaN kann 
         als 0 gedeutet werden.
@@ -250,7 +250,8 @@ def convert_sellers_to_cleaned_version(path_source_prefix, path_cleaned_data_pre
     """ sellers.parquet erstellen
         Die Postleitzahl waren nicht mit führenden Nullen. Das Attribut wurde abgeändert zu einen String mit führenden Nullen als fünfstellige Wert.
 
-        Manche Städtenamen wurden falsch geschrieben oder hatten in ihren Namen den den zugehörigen Bundesstaat. Dies wurde korrigiert.
+        Manche Städtenamen wurden falsch geschrieben oder hatten in ihren Namen den den zugehörigen Bundesstaat. Dies wurde korrigiert. Von 611 zu 560 wurden
+        die Städteanzahl reduziert.
     """
     file_name = "sellers"
     zip_code_variable = "seller_zip_code_prefix"
@@ -317,7 +318,6 @@ def convert_sellers_to_cleaned_version(path_source_prefix, path_cleaned_data_pre
         "sp / sp": "sao paulo",
         "tabao da serra": "taboao da serra"
     })
-
     # Attribut Gesamtumsatz erstellen
     df_items = pd.read_parquet(path_cleaned_data_prefix / "items.parquet")
     df_orders = pd.read_csv(path_source_prefix / "orders.csv")
@@ -344,7 +344,8 @@ def convert_customers_to_cleaned_version(path_source_prefix, path_cleaned_data_p
     """ customers.parquet erstellen
         Die Postleitzahl waren nicht mit führenden Nullen. Das Attribut wurde abgeändert zu einen String mit führenden Nullen als fünfstellige Wert.
 
-        Manche Städtenamen wurden falsch geschrieben. Dies wurde anhand der Wortähnlichkeit und den dazugehörigen Bundesstaat angepasst.
+        Manche Städtenamen wurden falsch geschrieben. Dies wurde anhand der Wortähnlichkeit und den dazugehörigen Bundesstaat angepasst. Von 4119 zu 4107
+        wurde die Anzahl an verschiedenen Städte reduziert.
     """
     file_name = "customers"
     zip_code_variable = "customer_zip_code_prefix"
@@ -352,7 +353,6 @@ def convert_customers_to_cleaned_version(path_source_prefix, path_cleaned_data_p
     
     df = pd.read_csv(path_source_prefix / f"{file_name}.csv")
     df[zip_code_variable] = df[zip_code_variable].astype("string").str.zfill(5)
-
     df[city_variable] = df[city_variable].replace({
         "arraial d ajuda": "arraial d'ajuda",
         "dias d avila": "dias d'avila",
