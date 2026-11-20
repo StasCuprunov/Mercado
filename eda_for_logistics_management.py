@@ -1,5 +1,14 @@
 import pandas as pd
 import plotly.express as px
+import importlib
+
+import style
+
+importlib.reload(style)
+
+from style import PASTELL
+
+first_color = PASTELL.layout.colorway[0]
 
 def draw_sales_volume_per_seller_id():
     """ Gibt die top_number höchsten Umsätze als Balkendiagramm an
@@ -28,11 +37,13 @@ def draw_sales_volume_per_seller_id():
         labels={
             seller_id_variable: "Verkäufer-ID",
             sales_volume_variable: "Gesamtumsatz",
-        },
+        }
     )
     
     # Passend zeichnen, so dass man komplett den höchsten Umsatzwert sehen kann
     fig.update_yaxes(range=[0, df_top[sales_volume_variable].max() * 1.1])
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
     
     fig.show()
 
@@ -65,6 +76,9 @@ def draw_sales_volume_per_seller_state():
         labels={seller_state_variable: "Bundesstaat", sales_volume_per_state_variable: "Gesamtumsatz in BRL - logarithmisch"},
         log_y=True
     )
+
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
     
     fig.show()
 
@@ -93,6 +107,8 @@ def draw_sales_volume_per_product_id():
         title=f"Gesamtumsatz der Top {top_number} pro Produkt aus Frachtkosten und Preis",
         labels={product_id_variable: "Produkt-ID", sales_volume_variable: "Gesamtsumme in BRL"},
     )
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
     
     fig.show()
 
@@ -123,6 +139,9 @@ def draw_sales_volume_per_customer_id():
         title="Gesamtumsatz pro Kunde",
         labels={customer_id_variable: "Kunden-ID", sales_volume_variable: "Gesamtumsatz in BRL"},
     )
+
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
     
     fig.show()
 
@@ -156,6 +175,8 @@ def draw_sales_volume_per_category():
             sales_volume_variable: "Gesamtumsatz in BRL",
         },
     )
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
     
     fig.show()
 
@@ -193,6 +214,8 @@ def draw_sales_volume_per_month():
             sales_volume_per_order_variable: "Gesamtumsatz in BRL"
         }
     )
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(line_color=first_color)
 
     fig.show()
 
@@ -234,6 +257,9 @@ def connection_between_sales_volume_and_number_of_photos():
             sales_volume_variable: "Gesamtumsatz inklusive Versandkosten in BRL"
         }
     )
+
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
     
     fig.show()
     
@@ -264,5 +290,8 @@ def connection_between_sales_volume_and_number_of_photos():
             number_products_variable: "Anzahl Produkte"
         }
     )
+
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
 
     fig.show()
