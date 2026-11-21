@@ -51,7 +51,7 @@ def draw_sales_volume_per_seller_id():
         title=f"Top {top_number} Verkäufer nach Gesamtumsatz",
         labels={
             seller_id_variable: "Verkäufer-ID",
-            sales_volume_variable: "Gesamtumsatz",
+            sales_volume_variable: "Gesamtumsatz in BRL",
         }
     )
     
@@ -164,7 +164,7 @@ def draw_sales_volume_per_state_per_product_category():
         template=PASTELL,
         title="Umsatz nach Verkäufer-Bundesstaat und Produktkategorie",
         labels={
-            "gesamtumsatz": "Gesamtumsatz inkl. Versand",
+            "gesamtumsatz": "Gesamtumsatz in BRL inkl. Versand",
             "seller_state": "Bundesstaat des Verkäufers",
             "product_category_name": "Produktkategorie",
         },
@@ -386,7 +386,7 @@ def connection_between_sales_volume_and_number_of_photos():
         title="Zusammenhang zwischen Produktfotos und Umsatz",
         labels={
             number_photos_variable: "Anzahl Produktfotos",
-            sales_volume_variable: "Gesamtumsatz inklusive Versandkosten in BRL"
+            sales_volume_variable: "Gesamtumsatz in BRL"
         }
     )
 
