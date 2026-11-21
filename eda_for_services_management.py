@@ -84,7 +84,8 @@ def draw_average_review_score_per_month():
     review_answer_timestamp_variable = "review_answer_timestamp"
     review_score_average_variable = "review_score_average"
     number_reviews_variable = "number_reviews"
-    
+
+    # Einlesen
     df = pd.read_parquet("cleaned_data/reviews.parquet")
 
     # Nur die letzten Bewertungen in Bedracht ziehen
@@ -107,7 +108,7 @@ def draw_average_review_score_per_month():
       .sort_values(review_answer_timestamp_variable)
     )
 
-    # Zeichnen: Durchschnittliche Bewertung pro Monat
+    # Zeichnen
     fig = px.line(
         average_per_month,
         x=review_answer_timestamp_variable,
@@ -126,10 +127,14 @@ def draw_average_review_score_per_month():
     fig.show()
 
 def draw_number_reviews_per_month():
+    """ Zeichne Anzahl Bewertungen pro Monat
+
+    """
     review_answer_timestamp_variable = "review_answer_timestamp"
     review_score_average_variable = "review_score_average"
     number_reviews_variable = "number_reviews"
-    
+
+    # Einlesen
     df = pd.read_parquet("cleaned_data/reviews.parquet")
 
     # Nur die letzten Bewertungen in Bedracht ziehen
@@ -151,7 +156,7 @@ def draw_number_reviews_per_month():
       .reset_index()
       .sort_values(review_answer_timestamp_variable)
     )
-    # Zeichnen: Anzahl Bewertungen pro Monat
+    # Zeichnen
     fig = px.line(
         average_per_month,
         x=review_answer_timestamp_variable,
@@ -170,25 +175,36 @@ def draw_number_reviews_per_month():
     fig.show()
 
 def plot_number_of_delays_per_month():
+    """ Zeichne Anzahl an Verspätungen pro Monat
+
+    """
+
+    delay_variable = "delay"
+    number_delays_variable = "number_delays"
+    
+    # Einlesen
     df = pd.read_parquet("merged_data/merged_orders_table.parquet")
+    
     # Nur die verspäteten Zeilen nehmen
-    df_delay = df.loc[df["delay"] == True]
+    df_delay = df.loc[df[delay_variable] == True]
 
     date = "order_delivered_customer_date"
-    
+
+    # Pro Monat die Anzahl an Verspätungen ausrechnen
     per_month = (
         df.assign(**{date: pd.to_datetime(df[date])})
-          .groupby(pd.Grouper(key=date, freq="MS"))["delay"]
+          .groupby(pd.Grouper(key=date, freq="MS"))[delay_variable]
           .sum(min_count=1)
-          .reset_index(name="number_delays")
+          .reset_index(name=number_delays_variable)
     )
-    
+
+    # Zeichnen
     fig = px.bar(
         per_month,
         x=date,
-        y="number_delays",
+        y=number_delays_variable,
         title="Anzahl verspätete Lieferungen pro Monat",
-        labels={date: "Liefermonat", "number_delays": "Verspätungen"},
+        labels={date: "Liefermonat", number_delays_variable: "Verspätungen"},
         template=PASTELL,
         color_discrete_sequence=[first_color],
     )
@@ -239,22 +255,29 @@ def plot_number_of_bad_reviews_per_day():
     fig.show()
 
 def plot_number_of_delays_per_day():
+    """ Zeichne pro Tag die Anzahl an Verspätungen
+        
+    """
+    date_variable = "order_delivered_customer_date"
+    number_delays_variable = "number_delays"
+
+    # Einlesen
     df = pd.read_parquet("merged_data/merged_orders_table.parquet")
-    date = "order_delivered_customer_date"
-    
+
+    # Pro Tag Anzahl an Verspätungen berechnen
     per_day = (
-        df.assign(**{date: pd.to_datetime(df[date])})
-          .groupby(pd.Grouper(key=date, freq="D"))["delay"]
+        df.assign(**{date_variable: pd.to_datetime(df[date_variable])})
+          .groupby(pd.Grouper(key=date_variable, freq="D"))["delay"]
           .sum()
-          .reset_index(name="number_delays")
+          .reset_index(name=number_delays_variable)
     )
     
     fig = px.bar(
         per_day,
-        x=date,
-        y="number_delays",
+        x=date_variable,
+        y=number_delays_variable,
         title="Anzahl verspäteter Lieferungen pro Tag",
-        labels={date: "Liefertag", "number_delays": "Verspätungen"},
+        labels={date_variable: "Liefertag", number_delays_variable: "Verspätungen"},
         template=PASTELL,
         color_discrete_sequence=[first_color],
     )
@@ -273,6 +296,7 @@ def draw_devlivery_time_in_days_and_number_of_reviews_per_review_score():
     """
     last_review_score_variable = "last_review_score"
     delivery_time_in_days_variable = "delivery_time_in_days"
+    number_of_defined_colors = 4
 
     # Einlesen
     df = pd.read_parquet("merged_data/merged_orders_table.parquet")
@@ -280,9 +304,10 @@ def draw_devlivery_time_in_days_and_number_of_reviews_per_review_score():
     # Histogramm über Lieferdauergruppe und Anzahl dazugehörigen Bewertungen
 
     time = ["<= 7", "8 to 14", "15 to 21", "> 21", "no value"]
-    color = dict(zip(time[:4], PASTELL.layout.colorway[:4]))
-    color["no value"] = "#9CA3AF"
+    color = dict(zip(time[:number_of_defined_colors], PASTELL.layout.colorway[:number_of_defined_colors]))
+    color["no value"] = "#9CA3AF" # Grau
 
+    # Zeichnen
     fig = px.histogram(
         df,
         x=last_review_score_variable,
@@ -309,7 +334,8 @@ def draw_delay_and_number_of_reviews_per_review_score():
     """ Zeichnen von Balkendiagramm mit Anzahl Verspätungen und dessen Bewertung
     """
     last_review_score_variable = "last_review_score"
-    
+
+    # Einlesen
     df = pd.read_parquet("merged_data/merged_orders_table.parquet")
 
     # Nur die verspäteten Zeilen nehmen
