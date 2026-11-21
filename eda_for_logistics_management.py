@@ -90,6 +90,7 @@ def sales_volume_for_seller_per_product_category(seller_ids):
         x=sales_volume_variable,
         y=seller_id_variable,
         color=product_category_name_variable,
+        color_discrete_sequence=px.colors.qualitative.Plotly,
         orientation="h",
         barmode="stack",
         template=PASTELL,
@@ -158,7 +159,8 @@ def draw_sales_volume_per_state_per_product_category():
         y="seller_state",
         color="product_category_name",
         orientation="h",
-        barmode="stack",
+        barmode="stack", 
+        color_discrete_sequence=px.colors.qualitative.Plotly,
         template=PASTELL,
         title="Umsatz nach Verkäufer-Bundesstaat und Produktkategorie",
         labels={
