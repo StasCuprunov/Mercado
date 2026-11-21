@@ -12,6 +12,18 @@ from style import PASTELL
 
 
 first_color = PASTELL.layout.colorway[0]
+
+review_answer_timestamp_variable = "review_answer_timestamp"
+review_score_average_variable = "review_score_average"
+number_reviews_variable = "number_reviews"
+delay_variable = "delay"
+number_delays_variable = "number_delays"
+number_of_reviews_variable = "number_of_reviews"
+last_review_score_variable = "last_review_score"
+total_value_variable = "total_value"
+delivery_time_in_days_variable = "delivery_time_in_days"
+review_id_variable = "review_id"
+review_score_variable = "review_score"
     
 
 def analyze_review_score():
@@ -27,7 +39,6 @@ def analyze_bad_reviews():
 def create_box_plots_for_reviews():
     """ Zeichen Boxplot für alle Jahre für das Attribut Bewertung
     """
-    review_answer_timestamp_variable = "review_answer_timestamp"
                                      
     df_reviews = pd.read_parquet("cleaned_data/reviews.parquet")
 
@@ -43,7 +54,7 @@ def create_box_plots_for_reviews():
     for year in years:
         df_dictionary[year] = df_reviews.loc[df_reviews[review_answer_timestamp_variable].dt.year == year]
         df_dictionary[year] = (
-            df_dictionary[year].sort_values("review_id")
+            df_dictionary[year].sort_values(review_id_variable)
                 .drop_duplicates(subset=review_answer_timestamp_variable, keep="last")
         )
 
@@ -61,7 +72,7 @@ def create_box_plots_for_reviews():
     for column, year in enumerate(years, start=1):
         fig.add_trace(
             go.Box(
-                y=df_dictionary[year]["review_score"],
+                y=df_dictionary[year][review_score_variable],
                 name=str(year),
                 boxmean=True
             ),
@@ -81,16 +92,13 @@ def draw_average_review_score_per_month():
     """ Zeichne pro Monat die durchschnittliche Bewertung
 
     """
-    review_answer_timestamp_variable = "review_answer_timestamp"
-    review_score_average_variable = "review_score_average"
-    number_reviews_variable = "number_reviews"
 
     # Einlesen
     df = pd.read_parquet("cleaned_data/reviews.parquet")
 
     # Nur die letzten Bewertungen in Bedracht ziehen
     df = (
-        df.sort_values("review_id")
+        df.sort_values(review_id_variable)
             .drop_duplicates(subset=review_answer_timestamp_variable, keep="last")
     )
     
@@ -99,7 +107,7 @@ def draw_average_review_score_per_month():
 
     # Berechne die Durchschnittsbewertung pro Monat und sortiere nach chronologische Zeit
     average_per_month = (
-    df.groupby(pd.Grouper(key=review_answer_timestamp_variable, freq="MS"))["review_score"]
+    df.groupby(pd.Grouper(key=review_answer_timestamp_variable, freq="MS"))[review_score_variable]
       .agg(**{
           review_score_average_variable: "mean",
           number_reviews_variable: "count",
@@ -130,16 +138,12 @@ def draw_number_reviews_per_month():
     """ Zeichne Anzahl Bewertungen pro Monat
 
     """
-    review_answer_timestamp_variable = "review_answer_timestamp"
-    review_score_average_variable = "review_score_average"
-    number_reviews_variable = "number_reviews"
-
     # Einlesen
     df = pd.read_parquet("cleaned_data/reviews.parquet")
 
     # Nur die letzten Bewertungen in Bedracht ziehen
     df = (
-        df.sort_values("review_id")
+        df.sort_values(review_id_variable)
             .drop_duplicates(subset=review_answer_timestamp_variable, keep="last")
     )
     
@@ -148,7 +152,7 @@ def draw_number_reviews_per_month():
 
     # Berechne die Durchschnittsbewertung pro Monat und sortiere nach chronologische Zeit
     average_per_month = (
-    df.groupby(pd.Grouper(key=review_answer_timestamp_variable, freq="MS"))["review_score"]
+    df.groupby(pd.Grouper(key=review_answer_timestamp_variable, freq="MS"))[review_score_variable]
       .agg(**{
           review_score_average_variable: "mean",
           number_reviews_variable: "count",
@@ -177,11 +181,7 @@ def draw_number_reviews_per_month():
 def plot_number_of_delays_per_month():
     """ Zeichne Anzahl an Verspätungen pro Monat
 
-    """
-
-    delay_variable = "delay"
-    number_delays_variable = "number_delays"
-    
+    """    
     # Einlesen
     df = pd.read_parquet("merged_data/merged_orders_table.parquet")
     
@@ -214,15 +214,12 @@ def plot_number_of_delays_per_month():
 def plot_number_of_bad_reviews_per_day():
     """ Zeichne pro Tag die Anzahl der schlechten Bewertungen
     """
-    review_answer_timestamp_variable = "review_answer_timestamp"
-    number_of_reviews_variable = "number_of_reviews"
-
     # Datei einlesen
     df = pd.read_parquet("cleaned_data/reviews.parquet")
 
     # Nur die letzten Bewertungen in Bedracht ziehen
     df = (
-        df.sort_values("review_id")
+        df.sort_values(review_id_variable)
             .drop_duplicates(subset=review_answer_timestamp_variable, keep="last")
     )
 
@@ -231,7 +228,7 @@ def plot_number_of_bad_reviews_per_day():
 
     # Zählt Anzahl schlechter Bewertungen pro Tag
     number_bad_reviews_per_day = (
-        df.loc[df["review_score"] <= 2]
+        df.loc[df[review_score_variable] <= 2]
           .groupby(pd.Grouper(key=review_answer_timestamp_variable, freq="D"))
           .size()
           .reset_index(name=number_of_reviews_variable)
@@ -259,7 +256,6 @@ def plot_number_of_delays_per_day():
         
     """
     date_variable = "order_delivered_customer_date"
-    number_delays_variable = "number_delays"
 
     # Einlesen
     df = pd.read_parquet("merged_data/merged_orders_table.parquet")
@@ -267,7 +263,7 @@ def plot_number_of_delays_per_day():
     # Pro Tag Anzahl an Verspätungen berechnen
     per_day = (
         df.assign(**{date_variable: pd.to_datetime(df[date_variable])})
-          .groupby(pd.Grouper(key=date_variable, freq="D"))["delay"]
+          .groupby(pd.Grouper(key=date_variable, freq="D"))[delay_variable]
           .sum()
           .reset_index(name=number_delays_variable)
     )
@@ -294,8 +290,6 @@ def draw_devlivery_time_in_days_and_number_of_reviews_per_review_score():
     """ Zeichnen von Balkendiagramm mit Anzahl Bewertungen pro Bewertungswert nach Lieferdauergruppe
 
     """
-    last_review_score_variable = "last_review_score"
-    delivery_time_in_days_variable = "delivery_time_in_days"
     number_of_defined_colors = 4
 
     # Einlesen
@@ -333,13 +327,11 @@ def draw_devlivery_time_in_days_and_number_of_reviews_per_review_score():
 def draw_delay_and_number_of_reviews_per_review_score():
     """ Zeichnen von Balkendiagramm mit Anzahl Verspätungen und dessen Bewertung
     """
-    last_review_score_variable = "last_review_score"
-
     # Einlesen
     df = pd.read_parquet("merged_data/merged_orders_table.parquet")
 
     # Nur die verspäteten Zeilen nehmen
-    df_delay = df.loc[df["delay"] == True]
+    df_delay = df.loc[df[delay_variable] == True]
 
     # Zeichnen
     fig = px.histogram(
@@ -367,10 +359,6 @@ def connection_betweeen_review_score_and_total_value():
     """ Zusammenhang zwischen Bewertungswert und Gesamtkosten herausfinden
     
     """
-
-    last_review_score_variable = "last_review_score"
-    total_value_variable = "total_value"
-
     # Daten einlesen
     df = pd.read_parquet("merged_data/merged_orders_table.parquet")
 
