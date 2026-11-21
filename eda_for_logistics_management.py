@@ -10,6 +10,21 @@ from style import PASTELL
 
 first_color = PASTELL.layout.colorway[0]
 
+def analyze_sales_volume_from_sellers():
+    seller_ids = draw_sales_volume_per_seller_id()
+    sales_volume_for_seller_per_product_category(seller_ids)
+
+def analyze_sales_volume_per_state():
+    draw_sales_volume_per_seller_state()
+    draw_sales_volume_per_state_per_product_category()
+
+def analyze_sales_volume_per_product_id():
+    draw_sales_volume_per_product_id()
+
+def analyze_sales_volume_per_category():
+    draw_sales_volume_per_category()
+    draw_heat_map_for_product_and_product_category()
+
 def draw_sales_volume_per_seller_id():
     """ Gibt die top_number höchsten Umsätze als Balkendiagramm an
     """
@@ -49,7 +64,7 @@ def draw_sales_volume_per_seller_id():
 
     seller_ids = df_top["seller_id"].dropna().unique().tolist()
 
-    sales_volume_for_seller_per_product_category(seller_ids)
+    return seller_ids
 
 def sales_volume_for_seller_per_product_category(seller_ids):
     seller_id_variable = "seller_id"
@@ -123,8 +138,6 @@ def draw_sales_volume_per_seller_state():
     
     fig.show()
 
-    draw_sales_volume_per_state_per_product_category()
-
 def draw_sales_volume_per_state_per_product_category():
     df = pd.read_parquet("merged_data/merged_products_table.parquet")
 
@@ -173,10 +186,12 @@ def draw_sales_volume_per_product_id():
         .groupby(product_id_variable, as_index=False)[sales_volume_variable]
         .sum()
     )
+
+    products = volume_per_product.nlargest(top_number, sales_volume_variable).sort_values(sales_volume_variable, ascending=False)
     
     # Zeichnen von Top top_number höchsten Gesamtumsätze von Produkten
     fig = px.bar(
-        volume_per_product.nlargest(top_number, sales_volume_variable).sort_values(sales_volume_variable, ascending=False),
+        products,
         x=product_id_variable,
         y=sales_volume_variable,
         title=f"Gesamtumsatz der Top {top_number} pro Produkt aus Frachtkosten und Preis",
@@ -187,7 +202,7 @@ def draw_sales_volume_per_product_id():
     
     fig.show()
 
-    draw_number_orders_per_product(top_number, volume_per_product.nlargest(top_number, sales_volume_variable).sort_values(sales_volume_variable, ascending=False))
+    draw_number_orders_per_product(top_number, products)
 
 def draw_number_orders_per_product(top_number, products):
     df = pd.read_parquet("merged_data/merged_products_table.parquet")
@@ -228,39 +243,6 @@ def draw_number_orders_per_product(top_number, products):
     .tolist()
     )
 
-def draw_sales_volume_per_customer_id():
-    """ Zeichen die top_number Gesamtumsätze pro Kunde
-    """
-    top_number = 20
-    customer_id_variable = "customer_id"
-    sales_volume_variable = "sales_volume"
-    
-    # Einlesen
-    df = pd.read_parquet("merged_data/merged_orders_table.parquet")
-    
-    # Umsatz pro Kunde bestimmen
-    df[sales_volume_variable] = df["total_value"] + df["total_freight_cost"]
-    
-    sales_volume_per_customer = (
-        df.groupby(customer_id_variable, as_index=False)[sales_volume_variable]
-        .sum()
-        .sort_values(sales_volume_variable, ascending=False)
-    )
-
-    # Zeichnen
-    fig = px.bar(
-        sales_volume_per_customer.head(top_number),
-        x=customer_id_variable,
-        y=sales_volume_variable,
-        title="Gesamtumsatz pro Kunde",
-        labels={customer_id_variable: "Kunden-ID", sales_volume_variable: "Gesamtumsatz in BRL"},
-    )
-
-    fig.update_layout(template=PASTELL)
-    fig.update_traces(marker_color=first_color)
-    
-    fig.show()
-
 def draw_sales_volume_per_category():
     """ Die top_number Kategorien im Bezug auf Gesamtumsatz als Balkendiagramm zeichnen
     """
@@ -285,7 +267,7 @@ def draw_sales_volume_per_category():
         sales_volume_per_category.nlargest(top_number, sales_volume_variable),
         x=product_category_name_variable,
         y=sales_volume_variable,
-        title="Gesamtumsatz pro Produktkategorie",
+        title=f"Gesamtumsatz der Top {top_number} Produktkategorien",
         labels={
             product_category_name_variable: "Produktkategorie",
             sales_volume_variable: "Gesamtumsatz in BRL",
@@ -295,7 +277,6 @@ def draw_sales_volume_per_category():
     fig.update_traces(marker_color=first_color)
     
     fig.show()
-    draw_heat_map_for_product_and_product_category()
 
 def draw_heat_map_for_product_and_product_category():
     minimum_number = 250
