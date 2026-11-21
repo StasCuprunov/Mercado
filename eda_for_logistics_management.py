@@ -10,6 +10,18 @@ from style import PASTELL
 
 first_color = PASTELL.layout.colorway[0]
 
+seller_id_variable = "seller_id"
+sales_volume_variable = "sales_volume"
+product_category_name_variable = "product_category_name"
+number_photos_variable = "number_photos"
+product_id_variable = "product_id"
+number_products_variable = "number_products"
+number_orders_variable = "number_orders"
+seller_state_variable = "seller_state"
+price_variable = "price"
+freight_value_variable = "freight_value"
+
+
 def analyze_sales_volume_from_sellers():
     seller_ids = draw_sales_volume_per_seller_id()
     sales_volume_for_seller_per_product_category(seller_ids)
@@ -29,9 +41,7 @@ def draw_sales_volume_per_seller_id():
     """ Gibt die top_number höchsten Umsätze als Balkendiagramm an
     """
     top_number = 20 # Wie viele der seller_ids sollen angezeigt werden
-    seller_id_variable = "seller_id"
-    sales_volume_variable = "sales_volume"
-
+    
     # Einlesen
     df = pd.read_parquet("merged_data/merged_products_table.parquet")
 
@@ -62,21 +72,17 @@ def draw_sales_volume_per_seller_id():
     
     fig.show()
 
-    seller_ids = df_top["seller_id"].dropna().unique().tolist()
+    seller_ids = df_top[seller_id_variable].dropna().unique().tolist()
 
     return seller_ids
 
-def sales_volume_for_seller_per_product_category(seller_ids):
-    seller_id_variable = "seller_id"
-    sales_volume_variable = "sales_volume"
-    product_category_name_variable = "product_category_name"
-    
+def sales_volume_for_seller_per_product_category(seller_ids):    
     df = pd.read_parquet("merged_data/merged_products_table.parquet")
 
     sales_volume = (
     df.loc[df[seller_id_variable].isin(seller_ids)]
       .assign(
-          sales_volume=lambda d: d["price"] + d["freight_value"],
+          sales_volume=lambda d: d[price_variable] + d[freight_value_variable],
           product_category_name=lambda d: (
               d[product_category_name_variable].fillna("Ohne Kategorie")
           ),
@@ -98,7 +104,7 @@ def sales_volume_for_seller_per_product_category(seller_ids):
         labels={
             sales_volume_variable: "Gesamtumsatz in BRL inkl. Versand",
             seller_id_variable: "Verkäufer-ID",
-            "product_category_name": "Produktkategorie",
+            product_category_name_variable: "Produktkategorie",
         },
     )
     fig.update_yaxes(categoryorder="total ascending")
@@ -109,7 +115,6 @@ def draw_sales_volume_per_seller_state():
     """
     seller_state_variable = "seller_state"
     sales_volume_per_state_variable = "sales_volume_per_state"
-    sales_volume_variable = "sales_volume"
 
     # Einlesen
     df = pd.read_parquet("merged_data/merged_products_table.parquet")
@@ -144,20 +149,20 @@ def draw_sales_volume_per_state_per_product_category():
 
     umsatz_pro_staat = (
     df.assign(
-        umsatz=lambda d: d["price"] + d["freight_value"],
+        umsatz=lambda d: d[price_variable] + d[freight_value_variable],
         product_category_name=lambda d: (
-            d["product_category_name"].astype("string").fillna("Ohne Kategorie")
+            d[product_category_name_variable].astype("string").fillna("Ohne Kategorie")
         ),
     )
-        .groupby(["seller_state", "product_category_name"], as_index=False)
+        .groupby([seller_state_variable, product_category_name_variable], as_index=False)
         .agg(gesamtumsatz=("umsatz", "sum"))
     )
 
     fig = px.bar(
         umsatz_pro_staat,
         x="gesamtumsatz",
-        y="seller_state",
-        color="product_category_name",
+        y=seller_state_variable,
+        color=product_category_name_variable,
         orientation="h",
         barmode="stack", 
         color_discrete_sequence=px.colors.qualitative.Plotly,
@@ -165,8 +170,8 @@ def draw_sales_volume_per_state_per_product_category():
         title="Umsatz nach Verkäufer-Bundesstaat und Produktkategorie",
         labels={
             "gesamtumsatz": "Gesamtumsatz in BRL inkl. Versand",
-            "seller_state": "Bundesstaat des Verkäufers",
-            "product_category_name": "Produktkategorie",
+            seller_state_variable: "Bundesstaat des Verkäufers",
+            product_category_name_variable: "Produktkategorie",
         },
     )
     fig.update_yaxes(categoryorder="total ascending")
@@ -176,15 +181,13 @@ def draw_sales_volume_per_product_id():
     """ Zeichne als Balkendiagramm den Gesamtumsatz pro Produkt
     """
     top_number = 20
-    product_id_variable = "product_id"
-    sales_volume_variable = "sales_volume"
     
     # Einlesen
     df = pd.read_parquet("merged_data/merged_products_table.parquet")
     
     # Pro Produkt Gesamtumsatz berechnen und als Variable "sales_volume" speichern
     volume_per_product = (
-        df.assign(sales_volume=df["price"] + df["freight_value"])
+        df.assign(sales_volume=df[price_variable] + df[freight_value_variable])
         .groupby(product_id_variable, as_index=False)[sales_volume_variable]
         .sum()
     )
@@ -208,9 +211,6 @@ def draw_sales_volume_per_product_id():
 
 def draw_number_orders_per_product(top_number, products):
     df = pd.read_parquet("merged_data/merged_products_table.parquet")
-    
-    product_id_variable = "product_id"
-    number_orders_variable = "number_orders"
     
     orders_per_product = (
     df[product_id_variable]
@@ -249,15 +249,13 @@ def draw_sales_volume_per_category():
     """ Die top_number Kategorien im Bezug auf Gesamtumsatz als Balkendiagramm zeichnen
     """
     top_number = 20
-    sales_volume_variable = "sales_volume"
-    product_category_name_variable = "product_category_name"
 
     # Einlesen
     df = pd.read_parquet("merged_data/merged_products_table.parquet")
 
     # Pro Kategorie dessen Umsatz aus Preis und Frachtkosten berechnen
     sales_volume_per_category = (
-        df.assign(sales_volume=df["price"] + df["freight_value"])
+        df.assign(sales_volume=df[price_variable] + df[freight_value_variable])
         .groupby(product_category_name_variable, as_index=False)[sales_volume_variable]
         .sum()
         .sort_values(sales_volume_variable, ascending=False)
@@ -282,8 +280,6 @@ def draw_sales_volume_per_category():
 
 def draw_heat_map_for_product_and_product_category():
     minimum_number = 250
-    product_category_name_variable = "product_category_name"
-    product_id_variable = "product_id"
     
     df = pd.read_parquet("merged_data/merged_products_table.parquet")
     orders = (
@@ -354,10 +350,6 @@ def draw_sales_volume_per_month():
 def connection_between_sales_volume_and_number_of_photos():
     """ Zusammenhang zwischen Anzahl Produktfotos und Umsatz vom Produkt herausfinden
     """
-    sales_volume_variable = "sales_volume"
-    number_photos_variable = "number_photos"
-    product_id_variable = "product_id"
-    number_products_variable = "number_products"
 
     # Einlesen
     df = pd.read_parquet("merged_data/merged_products_table.parquet")
@@ -365,7 +357,7 @@ def connection_between_sales_volume_and_number_of_photos():
     # Spearman-Korrelationskoeffizienten bestimmen
     
     # Gesamtpreis berechnen
-    df[sales_volume_variable] = df["price"] + df["freight_value"]
+    df[sales_volume_variable] = df[price_variable] + df[freight_value_variable]
 
     # Pro Produkt Anzahl Fotos und dessen Gesamtumsatz bestimmen
     sales_per_product = (
