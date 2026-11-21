@@ -123,6 +123,40 @@ def draw_sales_volume_per_seller_state():
     
     fig.show()
 
+    draw_sales_volume_per_state_per_product_category()
+
+def draw_sales_volume_per_state_per_product_category():
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    umsatz_pro_staat = (
+    df.assign(
+        umsatz=lambda d: d["price"] + d["freight_value"],
+        product_category_name=lambda d: (
+            d["product_category_name"].astype("string").fillna("Ohne Kategorie")
+        ),
+    )
+        .groupby(["seller_state", "product_category_name"], as_index=False)
+        .agg(gesamtumsatz=("umsatz", "sum"))
+    )
+
+    fig = px.bar(
+        umsatz_pro_staat,
+        x="gesamtumsatz",
+        y="seller_state",
+        color="product_category_name",
+        orientation="h",
+        barmode="stack",
+        template=PASTELL,
+        title="Umsatz nach Verkäufer-Bundesstaat und Produktkategorie",
+        labels={
+            "gesamtumsatz": "Gesamtumsatz inkl. Versand",
+            "seller_state": "Bundesstaat des Verkäufers",
+            "product_category_name": "Produktkategorie",
+        },
+    )
+    fig.update_yaxes(categoryorder="total ascending")
+    fig.show()
+
 def draw_sales_volume_per_product_id():
     """ Zeichne als Balkendiagramm den Gesamtumsatz pro Produkt
     """
@@ -152,6 +186,47 @@ def draw_sales_volume_per_product_id():
     fig.update_traces(marker_color=first_color)
     
     fig.show()
+
+    draw_number_orders_per_product(top_number, volume_per_product.nlargest(top_number, sales_volume_variable).sort_values(sales_volume_variable, ascending=False))
+
+def draw_number_orders_per_product(top_number, products):
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+    
+    product_id_variable = "product_id"
+    number_orders_variable = "number_orders"
+    
+    orders_per_product = (
+    df[product_id_variable]
+      .value_counts()
+      .rename_axis(product_id_variable)
+      .reset_index(name=number_orders_variable)
+    )
+    
+    fig = px.bar(
+        orders_per_product.head(top_number),
+        x=number_orders_variable,
+        y=product_id_variable,
+        orientation="h",
+        title=f"Die {top_number} meistbestellten Produkte",
+        labels={
+            number_orders_variable: "Anzahl Bestellungen",
+            product_id_variable: "Produkt-ID",
+        },
+        template=PASTELL,
+        color_discrete_sequence=[first_color],
+    )
+    
+    fig.update_yaxes(autorange="reversed")
+    fig.show()
+    
+    same_product_ids = (
+    products.loc[
+        products[product_id_variable].isin(orders_per_product.head(top_number)[product_id_variable]),
+        product_id_variable,
+    ]
+    .drop_duplicates()
+    .tolist()
+    )
 
 def draw_sales_volume_per_customer_id():
     """ Zeichen die top_number Gesamtumsätze pro Kunde
@@ -219,6 +294,39 @@ def draw_sales_volume_per_category():
     fig.update_layout(template=PASTELL)
     fig.update_traces(marker_color=first_color)
     
+    fig.show()
+    draw_heat_map_for_product_and_product_category()
+
+def draw_heat_map_for_product_and_product_category():
+    minimum_number = 250
+    product_category_name_variable = "product_category_name"
+    product_id_variable = "product_id"
+    
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+    orders = (
+        df.assign(
+            product_category_name=df[product_category_name_variable]
+            .astype("string")
+            .fillna("Ohne Kategorie")
+        )
+        .groupby([product_category_name_variable, product_id_variable], observed=True)["order_id"]
+        .nunique()
+    )
+    
+    heatmap = orders[orders > minimum_number].unstack(product_id_variable)
+    
+    fig = px.imshow(
+        heatmap,
+        aspect="auto",
+        template=PASTELL,
+        color_continuous_scale=["#FFFFFF", first_color],
+        labels={
+            "x": "Produkt-ID",
+            "y": "Produktkategorie",
+            "color": "Anzahl Bestellungen",
+        },
+        title=f"Bestellungen nach Produktkategorie und Produkt mit mindestens {minimum_number} Bestellungen",
+    )
     fig.show()
 
 def draw_sales_volume_per_month():
