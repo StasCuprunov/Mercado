@@ -12,6 +12,17 @@ from style import PASTELL
 
 
 first_color = PASTELL.layout.colorway[0]
+    
+
+def analyze_review_score():
+    create_box_plots_for_reviews()
+    draw_average_review_score_per_month()
+    draw_number_reviews_per_month()
+    plot_number_of_delays_per_month()
+
+def analyze_bad_reviews():
+    plot_number_of_bad_reviews_per_day()
+    plot_number_of_delays_per_day()
 
 def create_box_plots_for_reviews():
     """ Zeichen Boxplot für alle Jahre für das Attribut Bewertung
@@ -65,8 +76,9 @@ def create_box_plots_for_reviews():
     fig.update_layout(template=PASTELL)
     fig.show()
 
-def analyze_review_score():
-    """ Zeichne pro Monat die durchschnittliche Bewertung und zeichne Anzahl der Bewertungen pro Monat
+def draw_average_review_score_per_month():
+    
+    """ Zeichne pro Monat die durchschnittliche Bewertung
 
     """
     review_answer_timestamp_variable = "review_answer_timestamp"
@@ -93,7 +105,7 @@ def analyze_review_score():
       })
       .reset_index()
       .sort_values(review_answer_timestamp_variable)
-)
+    )
 
     # Zeichnen: Durchschnittliche Bewertung pro Monat
     fig = px.line(
@@ -113,6 +125,32 @@ def analyze_review_score():
     fig.update_traces(line_color=first_color)
     fig.show()
 
+def draw_number_reviews_per_month():
+    review_answer_timestamp_variable = "review_answer_timestamp"
+    review_score_average_variable = "review_score_average"
+    number_reviews_variable = "number_reviews"
+    
+    df = pd.read_parquet("cleaned_data/reviews.parquet")
+
+    # Nur die letzten Bewertungen in Bedracht ziehen
+    df = (
+        df.sort_values("review_id")
+            .drop_duplicates(subset=review_answer_timestamp_variable, keep="last")
+    )
+    
+    # Umwandeln in Datum
+    df[review_answer_timestamp_variable] = pd.to_datetime(df[review_answer_timestamp_variable])
+
+    # Berechne die Durchschnittsbewertung pro Monat und sortiere nach chronologische Zeit
+    average_per_month = (
+    df.groupby(pd.Grouper(key=review_answer_timestamp_variable, freq="MS"))["review_score"]
+      .agg(**{
+          review_score_average_variable: "mean",
+          number_reviews_variable: "count",
+      })
+      .reset_index()
+      .sort_values(review_answer_timestamp_variable)
+    )
     # Zeichnen: Anzahl Bewertungen pro Monat
     fig = px.line(
         average_per_month,
@@ -131,8 +169,6 @@ def analyze_review_score():
     fig.update_traces(line_color=first_color)
     fig.show()
 
-    plot_number_of_delays_per_month()
-    
 def plot_number_of_delays_per_month():
     df = pd.read_parquet("merged_data/merged_orders_table.parquet")
     # Nur die verspäteten Zeilen nehmen
@@ -201,8 +237,6 @@ def plot_number_of_bad_reviews_per_day():
     fig.update_layout(template=PASTELL)
     fig.update_traces(line_color=first_color)
     fig.show()
-
-    plot_number_of_delays_per_day()
 
 def plot_number_of_delays_per_day():
     df = pd.read_parquet("merged_data/merged_orders_table.parquet")
