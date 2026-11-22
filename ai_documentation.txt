@@ -1,3 +1,6 @@
+Einheitliches Design
+Der Code von der Datei style.py wurde mithilfe der KI erzeugt. Durch Überprüfung wurde festgestellt, dass das Design ansprechend ist.
+
 Aufgabe 2.1
 1. Für die Änderung der Postleitzahlen wurde der Code von der KI Codex generiert. Es wurde überprüft, ob die Postleitzahlen Nullen voran haben und ob sie fünfstellig sind.
 2. Der Code für die Änderung des Datentyps "Anzahl an Fotos" für das Produkt wurde von der KI erzeugt. Durch Überprüfung wurden die nicht definierten Werte zu 0 umgewandelt.
@@ -6,10 +9,10 @@ Aufgabe 2.1
 5. Der Code für die aktuellsten Review-Werte wurde von der KI übernommen. Es wurde überprüft, so dass es das richtige macht.
 6. Unterstützung gab es beim Herausfinden, ob Lieferant und Käufer in verschiedenen Bundesländern sind. Der Code wurde nachvollzogen und der Code stimmt dazu.
 7. Das Entfernen von nicht benötigten Bestellpositionen wurde mithilfe der KI gelöst. Durch Überprüfung wurde festgestellt, dass der Code das richtige tut.
+8. Die Dateiverwaltung wurde mithilfe von KI implementiert. Durch Auslagerung der Funktionen in andere Dateien wurde getestet, ob es möglich ist die Funktionen von anderen Dateien zu nutzen.
 
 Aufgabe 2.2
-Data Story Serviceleitung
 1. Der Code für die Generierung von Boxplots für die Bewertung für die Jahre 2016 - 2018 wurde von der KI erzeugt. Durch das Zeichnen wurde festgestellt, dass es die richtigen Boxplots zeichnet.
-2. Für den durchschnittliche Bewertung pro Monat wurde der Code von der KI verwendet. Nach Überprüfung wurde festgestelt, dass es das macht was es machen soll.
-3. Für die Anzahl schlechter Bewertungen pro Tag wurde die KI gefragt, wie es berechnet wird. Der dazugehörige Code ist auf Korrektheit überprüft worden.
-4. Es wurde für die Bestimmung des Zusammenhangs von Gesamtkosten und Bewertung die Bestimmung des Spearman-Korrelationskoeffizienten von der KI vorgeschlagen. Da Bewertung ein ordinalskalierter Wert ist und Gesamtkosten metrisch sind, ist dies möglich und sinnvoll.
+2. Das Gruppieren von Attributen mit den jeweiligen Kennzahlen wurde von der KI generiert. Durch Überprüfung wurde festgestellt, dass der Code korrekt arbeitet.
+3. Es wurde für die Bestimmung des Zusammenhangs von Gesamtkosten und Bewertung beziehungsweise Anzahl an Fotos und Umsatz der Spearman-Korrelationskoeffizient von der KI vorgeschlagen. Dies macht Sinn, da Bewertung und Anzahl von Fotos jeweils mindestens ordinalskaliert sind und Umsatz bzw. Gesamtkosten metrisch sind.
+4. Ein Großteil des Codes für die Darstellung der Diagramme wurde von der KI erzeugt. Durch das Anzeigen der Diagramme wurde festgestellt, ob die Diagramme angemessen Sachverhalte darstellen. Jedoch die Idee welche Diagramme verwendet werden sollen, stammen vom Programmierer.
