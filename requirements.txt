@@ -7,3 +7,5 @@ Folgende Bibliotheken werden verwendet:
 - plotly.express
 - plotly.graph_objects
 - plotly.subplots
+- plotly.io
+- pyarrow

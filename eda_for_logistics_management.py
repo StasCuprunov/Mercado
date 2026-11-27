@@ -1,0 +1,393 @@
+import pandas as pd
+import plotly.express as px
+import importlib
+
+import style
+
+importlib.reload(style)
+
+from style import PASTELL
+
+first_color = PASTELL.layout.colorway[0]
+
+seller_id_variable = "seller_id"
+sales_volume_variable = "sales_volume"
+product_category_name_variable = "product_category_name"
+number_photos_variable = "number_photos"
+product_id_variable = "product_id"
+number_products_variable = "number_products"
+number_orders_variable = "number_orders"
+seller_state_variable = "seller_state"
+price_variable = "price"
+freight_value_variable = "freight_value"
+
+
+def analyze_sales_volume_from_sellers():
+    seller_ids = draw_sales_volume_per_seller_id()
+    sales_volume_for_seller_per_product_category(seller_ids)
+
+def analyze_sales_volume_per_state():
+    draw_sales_volume_per_seller_state()
+    draw_sales_volume_per_state_per_product_category()
+
+def analyze_sales_volume_per_product_id():
+    draw_sales_volume_per_product_id()
+
+def analyze_sales_volume_per_category():
+    draw_sales_volume_per_category()
+    draw_heat_map_for_product_and_product_category()
+
+def draw_sales_volume_per_seller_id():
+    """ Gibt die top_number höchsten Umsätze als Balkendiagramm an
+    """
+    top_number = 20 # Wie viele der seller_ids sollen angezeigt werden
+    
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    # Die top_number höchsten Umsätze pro seller_id filtern
+    df_top = (
+        df.drop_duplicates(subset=seller_id_variable)
+        .sort_values(sales_volume_variable, ascending=False)
+        .head(top_number)
+        .copy()
+    )
+
+    # Zeichnen
+    fig = px.bar(
+        df_top,
+        x=seller_id_variable,
+        y=sales_volume_variable,
+        title=f"Top {top_number} Verkäufer nach Gesamtumsatz",
+        labels={
+            seller_id_variable: "Verkäufer-ID",
+            sales_volume_variable: "Gesamtumsatz in BRL",
+        }
+    )
+    
+    # Passend zeichnen, so dass man komplett den höchsten Umsatzwert sehen kann
+    fig.update_yaxes(range=[0, df_top[sales_volume_variable].max() * 1.1])
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
+    
+    fig.show()
+
+    seller_ids = df_top[seller_id_variable].dropna().unique().tolist()
+
+    return seller_ids
+
+def sales_volume_for_seller_per_product_category(seller_ids): 
+    """ In Abhängigkeit von seller_ids den Umsatz pro Produktkategorie aufschlüsseln
+    """
+
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    # Umsatz pro seller_id bestimmen und nach seller_id und product_category_name gruppieren
+    sales_volume = (
+    df.loc[df[seller_id_variable].isin(seller_ids)]
+      .assign(
+          sales_volume=lambda d: d[price_variable] + d[freight_value_variable],
+          product_category_name=lambda d: (
+              d[product_category_name_variable].fillna("Ohne Kategorie")
+          ),
+      )
+      .groupby([seller_id_variable, product_category_name_variable], as_index=False)
+      .agg(sales_volume=(sales_volume_variable, "sum"))
+    )
+
+    # Zeichnen
+    fig = px.bar(
+        sales_volume,
+        x=sales_volume_variable,
+        y=seller_id_variable,
+        color=product_category_name_variable,
+        color_discrete_sequence=px.colors.qualitative.Plotly, # Farbe default nehmen
+        orientation="h",
+        barmode="stack",
+        template=PASTELL,
+        title="Umsatz nach Verkäufer und Produktkategorie",
+        labels={
+            sales_volume_variable: "Gesamtumsatz in BRL inkl. Versand",
+            seller_id_variable: "Verkäufer-ID",
+            product_category_name_variable: "Produktkategorie",
+        },
+    )
+    fig.update_yaxes(categoryorder="total ascending")
+    fig.show()
+
+def draw_sales_volume_per_seller_state():
+    """ Zeichne als logarithmierte Punktdiagramm den Gesamtumsatz je Bundesstaat
+    """
+    sales_volume_per_state_variable = "sales_volume_per_state"
+
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    # Pro Bundesstaat den Gesamtumsatz über alle Verkäufer berechnen
+    sales_per_state = (
+        df
+        .groupby(seller_state_variable, as_index=False)[sales_volume_variable]
+        .sum()
+        .rename(columns={sales_volume_variable: sales_volume_per_state_variable})
+        .sort_values(sales_volume_per_state_variable, ascending=False)
+        .reset_index(drop=True)
+    )
+
+    # Zeichnen
+    fig = px.scatter(
+        sales_per_state.sort_values(sales_volume_per_state_variable, ascending=False),
+        x=seller_state_variable,
+        y=sales_volume_per_state_variable,
+        title="Gesamtumsatz pro Bundesstaat",
+        labels={seller_state_variable: "Bundesstaat", sales_volume_per_state_variable: "Gesamtumsatz in BRL - logarithmisch"},
+        log_y=True
+    )
+
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
+    
+    fig.show()
+
+def draw_sales_volume_per_state_per_product_category():
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    # Umsatz pro Staat ermitteln und nach product_category_name gruppieren
+    sales_volume_per_state = (
+    df.assign(
+        sales_volume=lambda d: d[price_variable] + d[freight_value_variable],
+        product_category_name=lambda d: (
+            d[product_category_name_variable].astype("string").fillna("Ohne Kategorie")
+        ),
+    )
+        .groupby([seller_state_variable, product_category_name_variable], as_index=False)
+        .agg(sales_volume=(sales_volume_variable, "sum"))
+    )
+
+    # Zeichnen
+    fig = px.bar(
+        sales_volume_per_state,
+        x=sales_volume_variable,
+        y=seller_state_variable,
+        color=product_category_name_variable,
+        orientation="h",
+        barmode="stack", 
+        color_discrete_sequence=px.colors.qualitative.Plotly, # Default Farben verwenden
+        template=PASTELL,
+        title="Umsatz nach Verkäufer-Bundesstaat und Produktkategorie",
+        labels={
+            sales_volume_variable: "Gesamtumsatz in BRL inkl. Versand",
+            seller_state_variable: "Bundesstaat des Verkäufers",
+            product_category_name_variable: "Produktkategorie",
+        },
+    )
+    fig.update_yaxes(categoryorder="total ascending")
+    fig.show()
+
+def draw_sales_volume_per_product_id():
+    """ Zeichne als Balkendiagramm den Gesamtumsatz pro Produkt
+    """
+    top_number = 20
+    
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+    
+    # Pro Produkt Gesamtumsatz berechnen und als Variable "sales_volume" speichern
+    volume_per_product = (
+        df.assign(sales_volume=df[price_variable] + df[freight_value_variable])
+        .groupby(product_id_variable, as_index=False)[sales_volume_variable]
+        .sum()
+    )
+
+    top_volume_per_products = volume_per_product.nlargest(top_number, sales_volume_variable).sort_values(sales_volume_variable, ascending=False)
+    
+    # Zeichnen von Top top_number höchsten Gesamtumsätze von Produkten
+    fig = px.bar(
+        top_volume_per_products,
+        x=product_id_variable,
+        y=sales_volume_variable,
+        title=f"Gesamtumsatz der Top {top_number} pro Produkt aus Frachtkosten und Preis",
+        labels={product_id_variable: "Produkt-ID", sales_volume_variable: "Gesamtsumme in BRL"},
+    )
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
+    
+    fig.show()
+
+    draw_number_orders_per_product(top_number)
+
+def draw_number_orders_per_product(top_number):
+    """ Zeichne Anzahl Bestellungen pro Produkt für die Top top_number
+
+    """
+
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    # Erhalte Anzahl an Bestellungen pro Produkt
+    orders_per_product = (
+    df[product_id_variable]
+      .value_counts()
+      .rename_axis(product_id_variable)
+      .reset_index(name=number_orders_variable)
+    )
+
+    # Zeichnen
+    fig = px.bar(
+        orders_per_product.head(top_number),
+        x=number_orders_variable,
+        y=product_id_variable,
+        orientation="h",
+        title=f"Die {top_number} meistbestellten Produkte",
+        labels={
+            number_orders_variable: "Anzahl Bestellungen",
+            product_id_variable: "Produkt-ID",
+        },
+        template=PASTELL,
+        color_discrete_sequence=[first_color],
+    )
+    
+    fig.update_yaxes(autorange="reversed")
+    fig.show()
+
+def draw_sales_volume_per_category():
+    """ Die top_number Kategorien im Bezug auf Gesamtumsatz als Balkendiagramm zeichnen
+    """
+    top_number = 20
+
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    # Pro Kategorie dessen Umsatz aus Preis und Frachtkosten berechnen
+    sales_volume_per_category = (
+        df.assign(sales_volume=df[price_variable] + df[freight_value_variable])
+        .groupby(product_category_name_variable, as_index=False)[sales_volume_variable]
+        .sum()
+        .sort_values(sales_volume_variable, ascending=False)
+        .reset_index(drop=True)
+    )
+
+    # Zeichnen der top_number Kategorien
+    fig = px.bar(
+        sales_volume_per_category.nlargest(top_number, sales_volume_variable),
+        x=product_category_name_variable,
+        y=sales_volume_variable,
+        title=f"Gesamtumsatz der Top {top_number} Produktkategorien",
+        labels={
+            product_category_name_variable: "Produktkategorie",
+            sales_volume_variable: "Gesamtumsatz in BRL",
+        },
+    )
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
+    
+    fig.show()
+
+def draw_heat_map_for_product_and_product_category():
+    """ Heatmap zwischen Produkt und Produktkategorie für die meist verkauftesten Produkte
+        
+    """
+    minimum_number = 250 # Wie viele soll mindestens ein Produkt an Anzahl Bestellungen haben
+
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+
+    # Bestellungen gruppieren nach product_category_name und product_id
+    orders = (
+        df.assign(
+            product_category_name=df[product_category_name_variable]
+            .astype("string")
+            .fillna("Ohne Kategorie")
+        )
+        .groupby([product_category_name_variable, product_id_variable], observed=True)["order_id"]
+        .nunique()
+    )
+    
+    heatmap = orders[orders > minimum_number].unstack(product_id_variable) # Nur diejenige Produkte nehmen, die die Mindestanzahl haben
+
+    # Zeichnen
+    fig = px.imshow(
+        heatmap,
+        aspect="auto",
+        template=PASTELL,
+        color_continuous_scale=["#FFFFFF", first_color],
+        labels={
+            "x": "Produkt-ID",
+            "y": "Produktkategorie",
+            "color": "Anzahl Bestellungen",
+        },
+        title=f"Bestellungen nach Produktkategorie und Produkt mit mindestens {minimum_number} Bestellungen",
+    )
+    fig.show()
+
+def connection_between_sales_volume_and_number_of_photos():
+    """ Zusammenhang zwischen Anzahl Produktfotos und Umsatz vom Produkt herausfinden
+    """
+
+    # Einlesen
+    df = pd.read_parquet("merged_data/merged_products_table.parquet")
+    
+    # Gesamtpreis berechnen
+    df[sales_volume_variable] = df[price_variable] + df[freight_value_variable]
+
+    # Pro Produkt Anzahl Fotos und dessen Gesamtumsatz bestimmen
+    sales_per_product = (
+        df.groupby(product_id_variable, as_index=False)
+        .agg(
+            number_photos=("product_photos_qty", "first"),
+            sales_volume=(sales_volume_variable, "sum")
+        )
+        .dropna(subset=[number_photos_variable, sales_volume_variable])
+    )
+
+    # Zeichnen
+    fig = px.scatter(
+        sales_per_product,
+        x=number_photos_variable,
+        y=sales_volume_variable,
+        hover_data=[product_id_variable],
+        title="Zusammenhang zwischen Produktfotos und Umsatz",
+        labels={
+            number_photos_variable: "Anzahl Produktfotos",
+            sales_volume_variable: "Gesamtumsatz in BRL"
+        }
+    )
+
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
+    
+    fig.show()
+    
+    # Spearman-Korrelation bestimmen
+    correlation = sales_per_product[number_photos_variable].corr(
+        sales_per_product[sales_volume_variable],
+        method="spearman"
+    )
+    
+    print(f"Spearman-Korrelation: {correlation:.3f}")
+
+    # Zeichnen von Anzahl Fotos in Abhängigkeit von Anzahl Produkten
+    products_per_number_photos = (
+        sales_per_product.groupby(number_photos_variable)
+        .size()
+        .reset_index(name=number_products_variable)
+        .sort_values(number_photos_variable)
+    )
+
+    # Zeichnen
+    fig = px.bar(
+        products_per_number_photos,
+        x=number_photos_variable,
+        y=number_products_variable,
+        title="Anzahl Produkte nach Anzahl der Produktfotos",
+        labels={
+            number_photos_variable: "Anzahl Fotos",
+            number_products_variable: "Anzahl Produkte"
+        }
+    )
+
+    fig.update_layout(template=PASTELL)
+    fig.update_traces(marker_color=first_color)
+
+    fig.show()
