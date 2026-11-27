@@ -321,45 +321,6 @@ def draw_heat_map_for_product_and_product_category():
     )
     fig.show()
 
-def draw_sales_volume_per_month():
-    """ Zeitlicher Verlauf von Gesamtumsatz von Mercado pro Monat
-
-    """
-    date_variable = "order_delivered_customer_date"
-    sales_volume_per_order_variable = "sales_volume_per_order"
-
-    # Einlesen
-    df = pd.read_parquet("merged_data/merged_orders_table.parquet")
-    
-    df[date_variable] = pd.to_datetime(df[date_variable])
-    
-    # Gesamtmumsatz per Bestellung berechnen
-    df[sales_volume_per_order_variable] = df["total_value"] + df["total_freight_cost"]
-
-    # Monatlicher Gesamtumsatz berechnen
-    monthly_sales = (
-        df.groupby(pd.Grouper(key=date_variable, freq="MS"))[sales_volume_per_order_variable]
-        .sum()
-        .reset_index()
-    )
-
-    # Zeichnen
-    fig = px.line(
-        monthly_sales,
-        x=date_variable,
-        y=sales_volume_per_order_variable,
-        markers=True,
-        title="Monatlicher Gesamtumsatz aller Bestellungen",
-        labels={
-            date_variable: "Monat",
-            sales_volume_per_order_variable: "Gesamtumsatz in BRL"
-        }
-    )
-    fig.update_layout(template=PASTELL)
-    fig.update_traces(line_color=first_color)
-
-    fig.show()
-
 def connection_between_sales_volume_and_number_of_photos():
     """ Zusammenhang zwischen Anzahl Produktfotos und Umsatz vom Produkt herausfinden
     """
